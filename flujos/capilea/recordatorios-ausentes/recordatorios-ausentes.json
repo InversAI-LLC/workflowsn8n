@@ -1,0 +1,869 @@
+{
+  "name": "Recordatorios Ausentes",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const dateArgStr = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Argentina/Buenos_Aires\"});\nconst ahora = new Date(dateArgStr);\n//ahora.setHours(0, 0, 0, 0);\n\nconst fechaFin = new Date();\nfechaFin.setDate(ahora.getDate());\nfechaFin.setHours(23, 59, 59, 999);\n\n//QUITAR LUEGO\nconst fechaInicio = new Date();\nfechaInicio.setDate(ahora.getDate());\nfechaInicio.setHours(23, 59, 59, 999);\n\n// Formato Skyia\nconst formatSkyia = (date) => {\n  const d = String(date.getDate()).padStart(2, '0');\n  const m = String(date.getMonth() + 1).padStart(2, '0');\n  const y = date.getFullYear();\n  return `${d}/${m}/${y}`;\n};\n\nreturn [{\n  json: {\n    skyia: {\n      desde: formatSkyia(fechaInicio),\n      hasta: formatSkyia(fechaFin)\n    },\n    ghl: {\n      startTime: fechaInicio.getTime(), // Milisegundos\n      endTime: fechaFin.getTime()   // Milisegundos\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        848
+      ],
+      "id": "f7c449ea-33c4-4200-b4ec-e50fb4038b56",
+      "name": "Get Timestamp"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1072,
+        848
+      ],
+      "id": "05d4b073-5b44-4453-9bf9-cab0246a9aee",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1424,
+        752
+      ],
+      "id": "cbc7bc84-dd8c-42e5-badd-6ad875b6acf6",
+      "name": "Get_Skyia_Events_Details"
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=2&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        400
+      ],
+      "id": "21deabaf-5603-4cb4-9337-0495b8aa8a5d",
+      "name": "Get Info CANCELADOS CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=3&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        624
+      ],
+      "id": "480d5780-58e6-4576-90cb-7dde91795115",
+      "name": "Get Info CONTROLES CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=13&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        832
+      ],
+      "id": "22176c8d-1fe6-4e2b-90ae-7d6a8707648f",
+      "name": "Get Info DERMO Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=5&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        1024
+      ],
+      "id": "ebb6aac9-937d-4ed4-98f9-a059a962cb10",
+      "name": "Get Info REVISACIONES CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=10&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        1216
+      ],
+      "id": "7ca34708-f8ad-4a2c-b343-431c78f2bbd7",
+      "name": "Get Info MESOTERAPIA CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=7&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        992,
+        1408
+      ],
+      "id": "d33c5dc2-69e8-4e91-84e7-9ddf010ed78c",
+      "name": "Get Info PRP CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.skyia.ar/webhook/skyia_api?x=REEMPLAZAR_SKYIA_API_KEY&api=getAgendaTurnos&idAgenda=2&idSucursal=1&idRecurso=1&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        224
+      ],
+      "id": "a37cccfe-9d60-4d2e-a98b-7176853d732f",
+      "name": "Get Info AUSENTES CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "fGnEFWqMyFh0VIPV1biz"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -272,
+        848
+      ],
+      "id": "28654b70-fbd0-4c35-8268-fdb3b0294b21",
+      "name": "Get Events GHL revisaciones1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "wWpl7nHjIzE2wbndE8pE"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -64,
+        848
+      ],
+      "id": "751ba37b-a5d7-41e1-9575-1004c399ea5d",
+      "name": "Get Events GHL dermo1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "Nn2PyACs0OBYSrQ5bFzu"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        848
+      ],
+      "id": "c9b99287-bff1-4c06-8af5-f2718797bf2d",
+      "name": "Get Events GHL prp1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "MEpJfFMuZXbtMgK8DbCy"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        432,
+        848
+      ],
+      "id": "e71b4c29-ce4f-4651-91d9-af0d9a228eb3",
+      "name": "Get Events GHL controles1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "LzQBDcqDSopp37434OTm"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -496,
+        848
+      ],
+      "id": "6c2df560-c1cf-41dc-8913-3cb713ea234a",
+      "name": "Get Events GHL meso1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. FECHA EXACTA DE ARGENTINA (A prueba de servidores UTC)\nconst dateArgStr = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Argentina/Buenos_Aires\"});\nconst hoyArg = new Date(dateArgStr);\n\nconst yyyy = hoyArg.getFullYear();\nconst mm = String(hoyArg.getMonth() + 1).padStart(2, '0');\nconst dd = String(hoyArg.getDate()).padStart(2, '0');\n\nconst fechaHoy = `${yyyy}-${mm}-${dd}`; \nconst fechaFormateada = `${dd}/${mm}/${yyyy}`; \n\nconst idToProf = {\n  \"1\": [\"AUSENTES\", \"AUSENTE\"], \n  \"2\": [\"CANCELADOS\", \"CANCELADO\"]\n};\nconst estadosRealizado = [\"REALIZADO\", \"ATENDIDO\"]; \n\nconst palabrasIgnorar = ['MESOTERAPIA', 'MESO', 'PRP', 'PLASMA', 'CONTROL', 'REVISACION', 'REVISACIONES', 'DERMO', 'DERMOPIGMENTACION', 'CAPILAR', 'PO', 'BONIFICADA', 'REFUERZO', 'CORTICOIDES', 'RAMOS', 'MEJIA', 'LOMAS', 'LOMITAS', 'SUCURSAL', 'STREET', 'SAN', 'JUSTO'];\n\n// FUNCIÓN DE COINCIDENCIA DE NOMBRES INFALIBLE POR TOKENS\nfunction verificarCoincidenciaNombre(ghlTitle, skyiaPaciente, minimoPalabras) {\n  if (!ghlTitle || !skyiaPaciente) return false;\n  \n  const cleanWords = (str) => {\n    return str.toUpperCase()\n      .normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\")\n      .replace(/[^A-Z0-9\\s]/g, \" \")\n      .split(/\\s+/)\n      .filter(w => w.length > 1 && !palabrasIgnorar.includes(w));\n  };\n\n  const wordsGHL = cleanWords(ghlTitle);\n  const wordsSkyia = cleanWords(skyiaPaciente);\n\n  let coincidencias = 0;\n  wordsSkyia.forEach(w => {\n    if (wordsGHL.includes(w)) coincidencias++;\n  });\n\n  return coincidencias >= minimoPalabras;\n}\n\n// 2. NODOS GHL Y EXTRACCIÓN HÍBRIDA\nconst nombresNodos = [\n  \"Get Events GHL meso1\", \n  \"Get Events GHL revisaciones1\", \n  \"Get Events GHL dermo1\", \n  \"Get Events GHL prp1\",\n  \"Get Events GHL controles1\"\n];\n\nlet ghlEvents = [];\nlet debugLog = [];\n\nnombresNodos.forEach(nombre => {\n  try {\n    const items = $(nombre).all();\n    items.forEach(item => {\n      if (item.json.events && Array.isArray(item.json.events)) ghlEvents = ghlEvents.concat(item.json.events);\n      else if (item.json.startTime) ghlEvents.push(item.json);\n    });\n  } catch (e) {\n    debugLog.push(`Sin datos en nodo: ${nombre}`);\n  }\n});\n\n// 3. EXTRACCIÓN DE SKYIA (Solo HOY y purgado de ELIMINADOS)\nconst skyiaDetails = $(\"Get_Skyia_Events_Details\").all()\n  .map(i => i.json)\n  .filter(e => e.fecha && e.fecha === fechaHoy && e.estado !== \"ELIMINADO\");\n\n// 4. PROCESAMIENTO Y CRUCE DE DATOS\nconst resultados = [];\nconst vistos = new Set();\n\nghlEvents.forEach(ghlEv => {\n  if (!ghlEv.startTime || !ghlEv.title || !ghlEv.contactId) return;\n\n  const tituloUpper = ghlEv.title.toUpperCase();\n  if (tituloUpper.includes(\"BLOQUEO\") || tituloUpper.includes(\"OCUPADO SKYIA\")) return;\n\n  const [fechaGHL, horaFullGHL] = ghlEv.startTime.split('T');\n  \n  if (fechaGHL === fechaHoy) {\n    const horaGHL = horaFullGHL.substring(0, 5);\n    const key = `${ghlEv.contactId}_${horaGHL}_${ghlEv.calendarId}`; \n\n    if (!vistos.has(key)) {\n      vistos.add(key);\n\n      // NIVEL 1: Coincidencia exacta de hora + 1 palabra del nombre\n      let pacienteSkyia = skyiaDetails.find(sd => {\n        const horaSkyia = sd.horaInicio ? sd.horaInicio.substring(0, 5) : \"\";\n        return horaSkyia === horaGHL && verificarCoincidenciaNombre(tituloUpper, sd.paciente.toUpperCase(), 1);\n      });\n\n      // NIVEL 2: Desfase temporal -> Buscamos en todo el día con un mínimo de 2 palabras coincidentes\n      if (!pacienteSkyia) {\n        pacienteSkyia = skyiaDetails.find(sd => {\n          return verificarCoincidenciaNombre(tituloUpper, sd.paciente.toUpperCase(), 2);\n        });\n      }\n\n      if (pacienteSkyia) {\n        const profUpper = pacienteSkyia.profesional ? pacienteSkyia.profesional.toUpperCase().trim() : \"\";\n        // Aseguramos quitar espacios extra para evaluar el guion correctamente\n        const estadoUpper = pacienteSkyia.estado ? pacienteSkyia.estado.toUpperCase().trim() : \"\"; \n\n        const esAusente = idToProf[\"1\"].includes(profUpper);\n        \n        // 🔥 LÓGICA DE DOCTORES AÑADIDA AQUÍ 🔥\n        // Verificamos si el estado empieza con \"-\" (es un doctor)\n        const esDoctor = estadoUpper.startsWith(\"-\");\n        \n        // Se considera REALIZADO si está en el array de estadosRealizado O si es un Doctor\n        const esRealizado = estadosRealizado.includes(estadoUpper) || esDoctor;\n\n        if (esRealizado || esAusente) {\n          const nombreCompletoRaw = ghlEv.title.split('-')[0].trim();\n          const nombreFormateado = nombreCompletoRaw\n            .split(' ')\n            .filter(word => word.length > 0)\n            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())\n            .join(' ');\n\n          resultados.push({\n            json: {\n              contactId: ghlEv.contactId,\n              appointmentId: ghlEv.id, \n              nombre: nombreFormateado,\n              hora: horaGHL,\n              fecha: fechaFormateada,\n              especialidad: pacienteSkyia.profesional || \"GENERAL\",\n              // Mantenemos la salida estandarizada para no romper tu nodo Switch posterior\n              estado: esRealizado ? \"REALIZADO\" : \"AUSENTE\", \n              // Dato extra por si deseas usarlo en las automatizaciones\n              doctorAsignado: esDoctor ? pacienteSkyia.estado.trim() : \"N/A\" \n            }\n          });\n        }\n      }\n    }\n  }\n});\n\nif (resultados.length === 0) {\n  return [{ json: { status: \"Sin citas procesadas para hoy\", fechaAuditada: fechaHoy, totalGhlLeidos: ghlEvents.length, errores: debugLog } }];\n}\n\nreturn resultados;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        832
+      ],
+      "id": "97869ac6-cf00-4ebc-8be8-38c197a11d84",
+      "name": "Check Ausentes y Asistidos"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d888827-6533-41e7-a630-9293318ce34f",
+              "leftValue": "={{ $json.estado }}",
+              "rightValue": "AUSENTE",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1968,
+        832
+      ],
+      "id": "55238ff5-5615-47a2-9740-3ffc8ab4a3ed",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/bbWHmyzXnoanJMsKSsJl/webhook-trigger/e82218e9-52a8-4b8f-b05f-7df02feb3e47",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2304,
+        672
+      ],
+      "id": "853246d6-ba36-4c4e-8f7e-6ea85cb4b958",
+      "name": "HTTP Request",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "content": "## Disparador y eventos GHL del día\n\nRango de fechas del día y lectura de los calendarios de GHL.",
+        "height": 340,
+        "width": 1684,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1102,
+        678
+      ],
+      "id": "7a8cf206-4547-4999-bb59-3c7d05d211f7",
+      "name": "Doc - Seccion 1"
+    },
+    {
+      "parameters": {
+        "content": "## Agenda de Skyia\n\nTurnos del día por recurso en Skyia.",
+        "height": 1524,
+        "width": 212,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        930,
+        54
+      ],
+      "id": "86564522-1da6-4817-9bef-1a6d6d126521",
+      "name": "Doc - Seccion 2"
+    },
+    {
+      "parameters": {
+        "content": "## Cruce y envío de ausentes\n\nCompara GHL vs Skyia y envía los ausentes a GHL.",
+        "height": 500,
+        "width": 1060,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1394,
+        502
+      ],
+      "id": "76b0667a-8078-4f3a-8ac1-fe1f89846d00",
+      "name": "Doc - Seccion 3"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 Recordatorios Ausentes\n\n**Cliente:** Capilea (sucursal Belgrano)\n\n**Objetivo:** Cada noche cruza las citas del día en GHL con el estado real en Skyia y envía a GHL los pacientes que quedaron como AUSENTES.\n\n**Disparador:** Schedule Trigger diario a las 23:00.\n\n**Integraciones:** GoHighLevel (LeadConnector API v2), Skyia API\n\n**Credenciales a asignar al importar:**\n- Header Auth: Auth Belgrano\n\n**Valores a reemplazar (secretos retirados del repo):**\n- `REEMPLAZAR_SKYIA_API_KEY`\n- `REEMPLAZAR_TOKEN_SKYIA`\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/capilea/recordatorios-ausentes/README.md",
+        "height": 580,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1102,
+        -646
+      ],
+      "id": "1386160d-118d-40e2-a7ee-fdfb87c02132",
+      "name": "Doc - Ficha del flujo"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del flujo: Recordatorios Ausentes\n\n### 1. Rango del día\n- `Get Timestamp` calcula el rango del día actual (hora de Argentina) en formatos GHL y Skyia.\n\n### 2. Eventos en GHL\n- `Get Events GHL ...` lee los calendarios de meso, revisaciones, dermo, PRP y controles.\n\n### 3. Turnos en Skyia\n- Los nodos `Get Info ... CRM Capilea` leen la agenda de Skyia por recurso (ausentes, cancelados, controles, dermo, revisaciones, mesoterapia, PRP) y `Get_Skyia_Events_Details` los une.\n\n### 4. Cruce y envío\n- `Check Ausentes y Asistidos` compara por fecha, hora y coincidencia de nombre (por palabras, ignorando términos genéricos) y marca cada cita como AUSENTE o ASISTIDO.\n- `If3` deja pasar solo los AUSENTE y `HTTP Request` los envía al *Inbound Webhook* de GHL (lotes de 2).\n\n### ⚠️ Observaciones\n- Tiene configurado un *Error Workflow* (`2nO4EfS90U7HC6hG`) que no forma parte de este repositorio.",
+        "height": 556,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -322,
+        -646
+      ],
+      "id": "9f766e99-81d2-4d55-93e4-b4d1fc920f34",
+      "name": "Doc - Descripcion del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL meso1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_Skyia_Events_Details": {
+      "main": [
+        [
+          {
+            "node": "Check Ausentes y Asistidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Info CANCELADOS CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Info CONTROLES CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get Info DERMO Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Get Info REVISACIONES CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Get Info MESOTERAPIA CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Get Info PRP CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Get Info AUSENTES CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get_Skyia_Events_Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL revisaciones1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL dermo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL dermo1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL prp1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL prp1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL controles1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL meso1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL revisaciones1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL controles1": {
+      "main": [
+        [
+          {
+            "node": "Get Info AUSENTES CRM Capilea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Info CANCELADOS CRM Capilea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Info CONTROLES CRM Capilea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Info DERMO Capilea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Info REVISACIONES CRM Capilea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Info MESOTERAPIA CRM Capilea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Info PRP CRM Capilea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Ausentes y Asistidos": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "errorWorkflow": "2nO4EfS90U7HC6hG"
+  },
+  "versionId": "b62a3165-0764-4b4e-8e44-f7fcd781b598",
+  "meta": {
+    "instanceId": "039fce773344de013634923d5a2bb656abb0045ca113d3fd7a7a61d949da1a5e"
+  },
+  "nodeGroups": [],
+  "id": "1xSE9Z1mfn3Rcs6n",
+  "tags": [
+    {
+      "updatedAt": "2026-04-22T01:37:42.855Z",
+      "createdAt": "2026-04-22T01:37:42.855Z",
+      "id": "0wWWdYshBYrVSsTd",
+      "name": "Belgrano"
+    }
+  ]
+}

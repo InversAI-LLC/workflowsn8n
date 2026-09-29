@@ -1,0 +1,1645 @@
+{
+  "name": "Vigilancia CRM Capilea Cirugias",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        -640
+      ],
+      "id": "f18ff6e7-4e95-4f82-8978-f8e0f6d2927b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlConsultaSkyia }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        -640
+      ],
+      "id": "9e36ebe8-a54a-4cd4-b35f-40ba0a7c5d54",
+      "name": "Get Free Slots CRM Capilea"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuración de Horario (15 min)\nconst businessHours = [\"09:00\", \"09:15\", \"09:30\", \"09:45\", \"10:00\", \"10:15\", \"10:30\", \"10:45\", \"11:00\", \"11:15\", \"11:30\", \"11:45\", \"12:00\", \"12:15\", \"12:30\", \"12:45\", \"13:00\", \"13:15\", \"13:30\", \"13:45\", \"14:00\", \"14:15\", \"14:30\", \"14:45\", \"15:00\", \"15:15\", \"15:30\", \"15:45\", \"16:00\", \"16:15\", \"16:30\", \"16:45\", \"17:00\", \"17:15\", \"17:30\", \"17:45\", \"18:00\", \"18:15\", \"18:30\", \"18:45\", \"19:00\", \"19:15\", \"19:30\", \"19:45\"];\nconst diasA_Escanear = 2;\nconst OFFSET = \"-03:00\"; // Desplazamiento de Argentina\n\n// 2. MAPPING\nconst calendarConfig = [\n  { skyiaId: 10, node: \"Get Events GHL meso\", calId: \"LzQBDcqDSopp37434OTm\" },\n  { skyiaId: 7, node: \"Get Events GHL prp\", calId: \"Nn2PyACs0OBYSrQ5bFzu\" },\n  { skyiaId: 5, node: \"Get Events GHL clientes\", calId: \"47N4WxTdTAOqHLmQd54i\" },\n  { skyiaId: 5,  node: \"Get Events GHL revisaciones\", calId: \"fGnEFWqMyFh0VIPV1biz\" },\n  { skyiaId: 3,  node: \"Get Events GHL controles\", calId: \"MEpJfFMuZXbtMgK8DbCy\" },\n  { skyiaId: 13,  node: \"Get Events GHL dermo\", calId: \"wWpl7nHjIzE2wbndE8pE\" }\n];\n\nconst skyiaFree = $(\"Get Free Slots CRM Capilea\").all();\nconst ghlDataByNode = {};\n\ncalendarConfig.forEach(conf => {\n  try {\n    const response = $(conf.node).first().json;\n    ghlDataByNode[conf.node] = response.events || [];\n  } catch (e) {\n    ghlDataByNode[conf.node] = [];\n  }\n});\n\nconst results = [];\nconst hoy = new Date();\n\nconst getNext15Min = (hora) => {\n  let [hh, mm] = hora.split(':').map(Number);\n  mm += 15;\n  if (mm === 60) { hh += 1; mm = 0; }\n  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;\n};\n\nfor (let i = 0; i < diasA_Escanear; i++) {\n  const fechaEvaluar = new Date(hoy);\n  fechaEvaluar.setDate(hoy.getDate() + i);\n  const yyyy = fechaEvaluar.getFullYear();\n  const mm = String(fechaEvaluar.getMonth() + 1).padStart(2, '0');\n  const dd = String(fechaEvaluar.getDate()).padStart(2, '0');\n  const fechaISO = `${yyyy}-${mm}-${dd}`;\n\n  const slotsSkyiaDeEsteDia = skyiaFree.filter(item => {\n    const f = item.json.FECHA && item.json.FECHA[0] ? item.json.FECHA[0].split('T')[0] : null;\n    return f === fechaISO;\n  });\n\n  if (slotsSkyiaDeEsteDia.length === 0) continue;\n\n  calendarConfig.forEach(conf => {\n    const currentSkyiaId = conf.skyiaId;\n    const currentGhlEvents = ghlDataByNode[conf.node];\n\n    businessHours.forEach(hora => {\n      const horaFinSlot = getNext15Min(hora);\n      \n      // CAMBIO AQUÍ: Añadimos el OFFSET para comparar timestamps idénticos\n      const slotStart = new Date(`${fechaISO}T${hora}:00${OFFSET}`).getTime();\n      const slotEnd = new Date(`${fechaISO}T${horaFinSlot}:00${OFFSET}`).getTime();\n\n      const estaLibreEnSkyia = slotsSkyiaDeEsteDia.some(slot => \n        slot.json.HORA === hora && Number(slot.json.IDPROFESIONAL) === Number(currentSkyiaId)\n      );\n\n      const cubiertoPorGHL = currentGhlEvents.some(event => {\n        const eventStart = new Date(event.startTime).getTime();\n        const eventEnd = new Date(event.endTime).getTime();\n        // Verificamos si hay solapamiento exacto\n        return eventStart <= slotStart && eventEnd >= slotEnd;\n      });\n\n      if (!estaLibreEnSkyia && !cubiertoPorGHL) {\n        results.push({\n          json: {\n            fecha: fechaISO,\n            hora: hora,\n            calendarId: conf.calId,\n            skyiaId: currentSkyiaId,\n            startDateTime: `${fechaISO}T${hora}:00${OFFSET}`,\n            endDateTime: `${fechaISO}T${horaFinSlot}:00${OFFSET}`,\n            debug: `Skyia ${currentSkyiaId} Ocupado | GHL ${conf.calId} Libre`\n          }\n        });\n      }\n    });\n  });\n}\n\nconst finalResults = [];\nconst seen = new Set();\nresults.forEach(item => {\n  const key = `${item.json.calendarId}_${item.json.startDateTime}`;\n  if (!seen.has(key)) {\n    seen.add(key);\n    finalResults.push(item);\n  }\n});\n\nreturn finalResults;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        1920
+      ],
+      "id": "4fc78c2e-2c01-4903-9886-8af60850fe01",
+      "name": "Comparador_bloques",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const ahora = new Date();\nahora.setHours(0, 0, 0, 0);\n\nconst fechaFin = new Date();\nfechaFin.setDate(ahora.getDate() + 30);\nfechaFin.setHours(23, 59, 59, 999);\n\n//QUITAR LUEGO\nconst fechaInicio = new Date();\nfechaInicio.setDate(ahora.getDate());\nfechaInicio.setHours(23, 59, 59, 999);\n\n// Formato Skyia\nconst formatSkyia = (date) => {\n  const d = String(date.getDate()).padStart(2, '0');\n  const m = String(date.getMonth() + 1).padStart(2, '0');\n  const y = date.getFullYear();\n  return `${d}/${m}/${y}`;\n};\n\nreturn [{\n  json: {\n    skyia: {\n      desde: formatSkyia(fechaInicio),\n      hasta: formatSkyia(fechaFin)\n    },\n    ghl: {\n      startTime: fechaInicio.getTime(), // Milisegundos\n      endTime: fechaFin.getTime()   // Milisegundos\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -640
+      ],
+      "id": "ea52e106-3bfe-459d-9fd7-ba665fe72c4f",
+      "name": "Get Timestamp"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtenemos la fecha actual (momento de ejecución)\nconst ahora = new Date();\n\n// Función auxiliar para formatear a DD/MM/YYYY\nconst formatFecha = (date) => {\n  const day = String(date.getDate() ).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\n\n// 2. Definimos fechaDesde (Hoy)\nconst fechaDesdeObj = new Date();\nfechaDesdeObj.setDate(ahora.getDate() );\nconst fechaDesde = formatFecha(fechaDesdeObj);\n\n// 3. Calculamos fechaHasta (Hoy + 7 días)\nconst fechaHastaObj = new Date();\nfechaHastaObj.setDate(ahora.getDate() + 30);\nconst fechaHasta = formatFecha(fechaHastaObj);\n\n// 4. Construimos la URL para consultar los huecos libres en ese rango\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\n\n// Parámetros de configuración (Ajusta idAgenda o idSucursal si es necesario)\nconst queryParams = {\n  api: \"getAgendaTurnosLibres\",\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  idAgenda: \"1\",\n  tipoAgenda: \"OTROS\",\n  idSucursal: \"1\",\n  duracion: \"15\",\n  //horaInicioAgenda: \"10:00\",\n  //horaFinAgenda: \"20:00\",\n  fechaDesde: fechaDesde,\n  fechaHasta: fechaHasta\n};\n\n// Unimos todo en un string de URL\nconst finalUrl = `${baseUrl}?${Object.keys(queryParams).map(key => `${key}=${queryParams[key]}`).join('&')}`;\n\nreturn [{\n  json: {\n    rangoConsulta: {\n      inicio: fechaDesde,\n      fin: fechaHasta\n    },\n    urlConsultaSkyia: finalUrl\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -640
+      ],
+      "id": "2135a7b3-a4b5-446d-9eab-19e5a494120f",
+      "name": "Get URL Skyia"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuración de Mapeo SkyiaId -> Categoría Profesional\nconst idToProf = {\n  \"1\": \"AUSENTES\", \"2\": \"CANCELADOS\", \"3\": \"CONTROLES\",\n  \"5\": \"REVISACIONES\", \"7\": \"PLASMA\", \"10\": \"MESOTERAPIA\", \"13\": \"DERMO\"\n};\n\n// 2. RECUPERACIÓN DE DATOS\nconst skyiaEvents = $(\"Get_Skyia_Events_Details\").all().map(item => item.json)\n                    .filter(event => event.idTurno); \n\nconst syncBlocks = $(\"Comparador_bloques\").all(); \nconst finalSync = [];\nconst processedBlocks = new Set(); \nconst processedAppointments = new Set(); \nconst normalizeDate = (d) => d ? d.split('T')[0] : null;\n\n// --- PASO 1: Identificar y Consolidar TODAS las Citas Reales ---\nsyncBlocks.forEach(block => {\n  const b = block.json;\n  const targetProf = idToProf[b.skyiaId.toString()];\n  \n  // CAMBIO CLAVE: Usamos .filter() para traer todas las citas del slot\n  const matchingEvents = skyiaEvents.filter(event => {\n    const sameDate = normalizeDate(event.fecha) === b.fecha;\n    const sameProf = event.profesional === targetProf;\n    const isWithinRange = b.hora >= event.horaInicio && b.hora < event.horaFin;\n    return sameDate && sameProf && isWithinRange;\n  });\n\n  if (matchingEvents.length > 0) {\n    matchingEvents.forEach(matchingEvent => {\n      const appointmentKey = `${b.calendarId}_${matchingEvent.idTurno}`;\n      \n      // Si la cita no ha sido procesada (para casos de citas de 30/60 min)\n      if (!processedAppointments.has(appointmentKey)) {\n        let title = \"Ocupado Skyia\";\n        // Lista extendida de IDs para mostrar título completo\n        const idsConDetalle = [\"10\", \"5\", \"7\", \"13\", \"1\", \"2\", \"3\"];\n        \n        if (idsConDetalle.includes(b.skyiaId.toString())) {\n          title = `${matchingEvent.paciente} - ${matchingEvent.producto}`;\n        }\n\n        finalSync.push({\n          json: {\n            fecha: b.fecha,\n            startTime: `${b.fecha}T${matchingEvent.horaInicio}:00`,\n            endTime: `${b.fecha}T${matchingEvent.horaFin}:00`,\n            calendarId: b.calendarId,\n            title: title,\n            nombreCompleto: matchingEvent.paciente,\n            email: matchingEvent.mail || `sync_${matchingEvent.idPaciente}@skyia.com`,\n            telefono: matchingEvent.telefono || \"\",\n            idTurno: matchingEvent.idTurno,\n            tipo: \"Cita Detallada\"\n          }\n        });\n        processedAppointments.add(appointmentKey);\n      }\n    });\n    // Marcamos el bloque como procesado para que no genere un \"Ocupado Skyia\" genérico\n    processedBlocks.add(`${b.calendarId}_${b.startDateTime}`);\n  }\n});\n\n// --- PASO 2: Bloqueos Manuales o Anónimos ---\nsyncBlocks.forEach(block => {\n  const b = block.json;\n  const blockKey = `${b.calendarId}_${b.startDateTime}`;\n  \n  if (!processedBlocks.has(blockKey)) {\n    finalSync.push({\n      json: {\n        fecha: b.fecha,\n        startTime: b.startDateTime,\n        endTime: b.endDateTime,\n        calendarId: b.calendarId,\n        title: \"Ocupado Skyia\",\n        tipo: \"Bloqueo Manual/Interno\"\n      }\n    });\n  }\n});\n\nreturn finalSync;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        1936
+      ],
+      "id": "02348546-3d80-428b-ab97-0c0483e91f9c",
+      "name": "Sincronizar info bloques"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version ",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $('Estandarizacion Numeros Argentinos').item.json.nombreCompleto }}\",\n \"locationId\": \"bbWHmyzXnoanJMsKSsJl\",\n  \"gender\": \"male\",\n  \"phone\": \"{{ $('Estandarizacion Numeros Argentinos').item.json.telefono_principal }}\"\n\n\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3056,
+        -432
+      ],
+      "id": "a3c8da4f-d7fc-425d-8c32-ba7d071f4d76",
+      "name": "Crear contacto en INVERS1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version ",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"locationId\": \"bbWHmyzXnoanJMsKSsJl\",\n  \"page\": 1,\n  \"pageLimit\": 20,\n  \"filters\": [\n    {\n      \"group\": \"OR\",\n      \"filters\": [\n        {\n       \"field\": \"phone\",\n       \"operator\": \"eq\",\n       \"value\": \"{{ $json.telefono_principal }}\"\n        },\n        {\n          \"field\": \"phone\",\n          \"operator\": \"eq\",\n          \"value\": \"{{ $json.telefono_fijo }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        -704
+      ],
+      "id": "16ef2ea1-9c32-49ee-aa18-433d630610ee",
+      "name": "Buscar contacto en INVERS1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "85fa912c-2430-4747-be2d-94e0ec94ecca",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "5541365d-34e3-4474-9ce5-a5cdd82c0762",
+              "leftValue": "={{ $('Switch').item.json.startTime }}",
+              "rightValue": "={{ $('Schedule Trigger').first().json.timestamp }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2624,
+        -368
+      ],
+      "id": "ea32dd91-0162-4c8c-a149-53eabde314dd",
+      "name": "Validacion contacto1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bfb4ca79-15f7-46de-ab61-e0bee8d64800",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "=Ocupado Skyia",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2032,
+        -688
+      ],
+      "id": "e2a2e94e-b14e-4434-949d-515db68d83fe",
+      "name": "Contacto vs Ocupado"
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=5&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        -400
+      ],
+      "id": "0d281568-a126-4d62-a1b5-dfd94a6c3625",
+      "name": "Get Info REVISACIONES CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Mapeos de configuración\nconst idToProf = {\n  \"1\": \"AUSENTES\", \"2\": \"CANCELADOS\", \"3\": \"CONTROLES\",\n  \"5\": \"REVISACIONES\", \"7\": \"PLASMA\", \"10\": \"MESOTERAPIA\", \"13\": \"DERMO\"\n};\n\nconst calendarConfig = [\n  { skyiaId: 10, node: \"Get Events GHL meso\", calId: \"LzQBDcqDSopp37434OTm\" },\n  { skyiaId: 7, node: \"Get Events GHL prp\", calId: \"Nn2PyACs0OBYSrQ5bFzu\" },\n  { skyiaId: 5, node: \"Get Events GHL clientes\", calId: \"47N4WxTdTAOqHLmQd54i\" },\n  { skyiaId: 5,  node: \"Get Events GHL revisaciones\", calId: \"fGnEFWqMyFh0VIPV1biz\" },\n  { skyiaId: 3,  node: \"Get Events GHL controles\", calId: \"MEpJfFMuZXbtMgK8DbCy\" },\n  { skyiaId: 13,  node: \"Get Events GHL dermo\", calId: \"wWpl7nHjIzE2wbndE8pE\" }\n];\n\nconst businessHours = [\"09:00\", \"09:15\", \"09:30\", \"09:45\", \"10:00\", \"10:15\", \"10:30\", \"10:45\", \"11:00\", \"11:15\", \"11:30\", \"11:45\", \"12:00\", \"12:15\", \"12:30\", \"12:45\", \"13:00\", \"13:15\", \"13:30\", \"13:45\", \"14:00\", \"14:15\", \"14:30\", \"14:45\", \"15:00\", \"15:15\", \"15:30\", \"15:45\", \"16:00\", \"16:15\", \"16:30\", \"16:45\", \"17:00\", \"17:15\", \"17:30\", \"17:45\", \"18:00\", \"18:15\", \"18:30\", \"18:45\", \"19:00\", \"19:15\", \"19:30\", \"19:45\"];\nconst OFFSET = \"-03:00\";\n\n// 2. RECUPERACIÓN DE DATOS\nconst skyiaFree = $(\"Get Free Slots CRM Capilea\").all();\n// Consolidamos todos los detalles de citas de los nodos \"Get Info Skyia\"\nconst skyiaDetails = $(\"Get_Skyia_Events_Details\").all().map(i => i.json).filter(e => e.idTurno);\n\nconst ghlDataByNode = {};\ncalendarConfig.forEach(conf => {\n  try { ghlDataByNode[conf.node] = $(conf.node).first().json.events || []; } \n  catch (e) { ghlDataByNode[conf.node] = []; }\n});\n\nconst finalSync = []; // AHORA SÍ: Definido correctamente\nconst diasA_Escanear = 5;\nconst hoy = new Date();\n\n// 3. PROCESAMIENTO\nfor (let i = 0; i < diasA_Escanear; i++) {\n  const fechaEvaluar = new Date(hoy);\n  fechaEvaluar.setDate(hoy.getDate() + i);\n  const yyyy = fechaEvaluar.getFullYear();\n  const mm = String(fechaEvaluar.getMonth() + 1).padStart(2, '0');\n  const dd = String(fechaEvaluar.getDate()).padStart(2, '0');\n  const fechaISO = `${yyyy}-${mm}-${dd}`;\n\n  const slotsSkyiaDeEsteDia = skyiaFree.filter(item => {\n    const f = item.json.FECHA && item.json.FECHA[0] ? item.json.FECHA[0].split('T')[0] : null;\n    return f === fechaISO;\n  });\n\n  calendarConfig.forEach(conf => {\n    const currentSkyiaId = conf.skyiaId;\n    const profName = idToProf[currentSkyiaId];\n    const ghlEvents = ghlDataByNode[conf.node];\n\n    // A. BUSCAR CITAS DETALLADAS (Incluyendo Sobreturnos)\n    const matchingSkyiaAppointments = skyiaDetails.filter(sd => \n      sd.profesional === profName && sd.fecha.startsWith(fechaISO)\n    );\n\n    matchingSkyiaAppointments.forEach(appointment => {\n      const expectedTitle = `${appointment.paciente} - ${appointment.producto}`;\n      const startTimeStr = `${fechaISO}T${appointment.horaInicio}:00${OFFSET}`;\n\n      // Verificamos si ESTA cita específica (paciente + hora) existe en este calendario de GHL\n      const existsInGHL = ghlEvents.some(ge => \n        ge.startTime === startTimeStr && ge.title.trim().toUpperCase() === expectedTitle.trim().toUpperCase()\n      );\n\n      if (!existsInGHL) {\n        finalSync.push({\n          json: {\n            calendarId: conf.calId,\n            startTime: startTimeStr,\n            endTime: `${fechaISO}T${appointment.horaFin}:00${OFFSET}`,\n            title: expectedTitle,\n            nombreCompleto: appointment.paciente,\n            email: appointment.mail || `sync_${appointment.idPaciente}@skyia.com`,\n            telefono: appointment.telefono || \"\",\n            idTurno: appointment.idTurno,\n            tipo: \"Cita Detallada / Sobreturno\"\n          }\n        });\n      }\n    });\n\n    // B. BUSCAR BLOQUEOS MANUALES (Si el slot está ocupado pero no hay paciente con nombre)\n    businessHours.forEach(hora => {\n      const startTimeStr = `${fechaISO}T${hora}:00${OFFSET}`;\n      \n      const isBusyInSkyia = !slotsSkyiaDeEsteDia.some(sf => \n        sf.json.HORA === hora && Number(sf.json.IDPROFESIONAL) === Number(currentSkyiaId)\n      );\n\n      // Verificamos si este bloque de 15 min está cubierto por alguna cita detallada encontrada arriba\n      const hasDetail = matchingSkyiaAppointments.some(sd => \n        hora >= sd.horaInicio && hora < sd.horaFin\n      );\n\n      const hasGhlBlock = ghlEvents.some(ge => \n        ge.startTime === startTimeStr && ge.title === \"Ocupado Skyia\"\n      );\n\n      if (isBusyInSkyia && !hasDetail && !hasGhlBlock) {\n        finalSync.push({\n          json: {\n            calendarId: conf.calId,\n            startTime: startTimeStr,\n            endTime: `${fechaISO}T${getNext15Min(hora)}:00${OFFSET}`,\n            title: \"Ocupado Skyia\",\n            tipo: \"Bloqueo Manual\"\n          }\n        });\n      }\n    });\n  });\n}\n\nfunction getNext15Min(hora) {\n  let [hh, mm] = hora.split(':').map(Number);\n  mm += 15;\n  if (mm === 60) { hh += 1; mm = 0; }\n  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;\n}\n\nreturn finalSync;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        1920
+      ],
+      "id": "ff112f8f-9699-4055-88f1-d4c46248aafa",
+      "name": "Sincronizacion Bloques"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2b07bbd5-d20b-4c27-b323-8003c74e4963",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "delete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Borrar cita"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "64914332-35fb-4e4a-b46d-15a497d040fc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Crear cita GHL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "92696a67-3446-4b61-a93e-dfcf2f5568a7",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "updateStatus",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Update Status Cancelado o Ausente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1408,
+        -672
+      ],
+      "id": "5ef254b6-adca-4a09-b2a1-b297f37ab05a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/calendars/events/appointments/{{ $json.appointmentId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appointmentStatus",
+              "value": "={{ $json.status }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1984,
+        -416
+      ],
+      "id": "e7442f69-ad73-40e4-86a7-0c3b1d4eab38",
+      "name": "Update Status",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=http://api.cloud.skyia.ar/webhook/skyia_api?api=getAgendaTurnos&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&idSucursal=1&idRecurso=10&fechaDesde=05/19/2026&fechaHasta=05/28/2026",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        -400
+      ],
+      "id": "1685e797-842b-4087-8820-cb511d56523f",
+      "name": "Get Info MESOTERAPIA CRM Capilea1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "63e50ef0-1109-4647-9968-4d94a474fa08",
+              "leftValue": "={{ $json.error.message }}",
+              "rightValue": "This location does not allow duplicated contacts",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3264,
+        -432
+      ],
+      "id": "160fae04-e642-411c-a057-ba809c1dee7d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iteramos sobre TODOS los items que ingresan al nodo\nreturn $input.all().map(item => {\n    const itemData = item.json;\n    let finalContactId = \"\";\n\n    // 1. Caso de Éxito: Se creó normalmente\n    if (itemData.contact && itemData.contact.id) {\n        finalContactId = itemData.contact.id;\n    } \n    // 2. Caso de Fallo: Extracción Segura\n    else {\n        let errorText = \"\";\n\n        // Recopilamos el texto del error de las 3 posibles ubicaciones seguras\n        if (itemData.error && typeof itemData.error.message === 'string') {\n            errorText += itemData.error.message;\n        }\n        if (itemData.response && itemData.response.data) {\n            errorText += JSON.stringify(itemData.response.data);\n        }\n        if (itemData.message && typeof itemData.message === 'string') {\n            errorText += itemData.message;\n        }\n\n        // El Regex Cazador (Case insensitive y a prueba de caracteres de escape)\n        const regex = /contactid[\"\\\\:\\s]+([a-zA-Z0-9\\-_]{15,30})/i;\n        const match = errorText.match(regex);\n        \n        if (match && match[1]) {\n            finalContactId = match[1];\n        }\n    }\n\n    // Retornamos el item original junto con el ID resuelto para ESTE item en particular\n    return {\n        json: {\n            ...itemData,\n            resolvedContactId: finalContactId,\n            _debugErrorText: finalContactId ? undefined : \"No se encontró ID en el error\" \n        }\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        -672
+      ],
+      "id": "d8095d1b-ed70-40c7-a625-a4b1b17e7667",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/bbWHmyzXnoanJMsKSsJl/webhook-trigger/J1y6RHyd8kGMSbOgFKKp",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"title\": \"{{ $('Estandarizacion Numeros Argentinos').item.json.title }}\",\n\"telefono\": \"{{ $('Estandarizacion Numeros Argentinos').item.json.telefono }}\"}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4304,
+        32
+      ],
+      "id": "428559f3-5cb3-4f2d-a383-db03cfa9d4a4",
+      "name": "Notificar falla de sincronización",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b817b1c4-9b31-4638-832e-672f234524b8",
+              "leftValue": "={{ $json.contact.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3696,
+        -128
+      ],
+      "id": "a3f7eb4f-cc27-441f-925f-98e2b394e354",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. CONFIGURACIÓN EXCLUSIVA PARA QUIRÓFANO\nconst calendarConfig = [\n  // Reemplaza \"TU_CALENDAR_ID_AQUI\" con el ID del calendario de cirugías en GHL\n  { skyiaId: 6, node: \"Get Events GHL quirofano\", calId: \"Yvk69MywEHyrt9oqUyVX\" } \n];\n\nconst OFFSET = \"-03:00\";\nconst diasA_Escanear = 30;\nconst OFFSET_ARG = -3;\nconst hoy = new Date(new Date().getTime() + (OFFSET_ARG + 3) * 3600000);\n\n// --- ESTADOS EXCLUSIVOS DE CIRUGÍAS ---\nconst estadosCreacion = [\"ESTUDIOS REALIZADOS\", \"REALIZADO\"]; \nconst estadosAsistido = [\"REALIZADO\"];\n\n// 2. RECOPILACIÓN DE DATOS (Nuevos Nodos)\nconst skyiaFree = $(\"Get Free Slots CRM Capilea\").all();\n\n// Leemos la info exclusiva del quirófano\nconst skyiaDetails = $(\"Get Info QUIROFANO CRM Capilea\").all()\n  .map(i => i.json)\n  .filter(e => e.idTurno && e.estado !== \"ELIMINADO\");\n\nconst ghlDataByNode = {};\n\ncalendarConfig.forEach(conf => {\n  try {\n    const items = $(conf.node).all();\n    let events = [];\n    items.forEach(item => {\n      if (item.json.events && Array.isArray(item.json.events)) events = events.concat(item.json.events);\n      else if (item.json.startTime) events.push(item.json);\n    });\n    ghlDataByNode[conf.node] = events;\n  } catch (e) { ghlDataByNode[conf.node] = []; }\n});\n\nconst finalActions = [];\n\n// 3. PROCESAMIENTO POR DÍA\nfor (let i = 0; i < diasA_Escanear; i++) {\n  const fechaEvaluar = new Date(hoy);\n  fechaEvaluar.setDate(hoy.getDate() + i);\n  const fechaISO = `${fechaEvaluar.getFullYear()}-${String(fechaEvaluar.getMonth() + 1).padStart(2, '0')}-${String(fechaEvaluar.getDate()).padStart(2, '0')}`;\n\n  const slotsSkyiaLibres = skyiaFree.filter(item => item.json.fecha && item.json.fecha.startsWith(fechaISO));\n\n  calendarConfig.forEach(conf => {\n    const currentSkyiaId = conf.skyiaId; // idEntidad = 6\n    \n    // Filtramos los slots libres exclusivos del Quirófano\n    const misSlotsLibres = slotsSkyiaLibres.filter(sf => Number(sf.json.idEntidad) === Number(currentSkyiaId));\n    \n    // Filtramos los detalles de las cirugías reales\n    const skyiaRealAppointments = skyiaDetails.filter(sd => \n      (sd.profesional === \"QUIROFANO\" || sd.agenda === \"CIRUGIAS\") && \n      sd.fecha.startsWith(fechaISO) &&\n      estadosCreacion.includes(sd.estado?.toUpperCase()) \n    );\n\n    // --- CREACIÓN DE GRILLA INDIVIDUAL PARA QUIRÓFANO ---\n    let profTimes = misSlotsLibres.map(sf => sf.json.horaInicio.substring(0, 5))\n      .concat(skyiaRealAppointments.map(sd => sd.horaInicio));\n    \n    let profGrid = [];\n    if (profTimes.length > 0) {\n      profTimes.sort();\n      const minTime = profTimes[0];\n      const maxTime = profTimes[profTimes.length - 1];\n      \n      let current = minTime;\n      while (current <= maxTime) {\n        profGrid.push(current);\n        let [h, m] = current.split(':').map(Number);\n        m += 15;\n        if (m >= 60) { h += 1; m -= 60; }\n        current = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;\n      }\n    }\n\n    const ghlEvents = ghlDataByNode[conf.node].filter(e => e.startTime.startsWith(fechaISO) && e.calendarId === conf.calId);\n\n    // --- LIMPIEZA Y ACTUALIZACIÓN DE GHL ---\n    ghlEvents.forEach(ghlEv => {\n      const horaGHL = ghlEv.startTime.split('T')[1].substring(0, 5);\n      const esBloqueoGHL = ghlEv.title.toUpperCase().includes(\"OCUPADO SKYIA\");\n      const ahoraEstaLibreEnSkyia = misSlotsLibres.some(sf => sf.json.horaInicio.substring(0, 5) === horaGHL);\n\n      // Limpieza de bloqueos\n      if (esBloqueoGHL) {\n        const estaEnGrilla = profGrid.includes(horaGHL);\n        if (ahoraEstaLibreEnSkyia || !estaEnGrilla) {\n          finalActions.push({ json: { action: \"delete\", appointmentId: ghlEv.id, title: ghlEv.title, reason: \"Limpieza de Bloqueo Inválido/Fantasma\" } });\n        }\n        return;\n      }\n\n      // Buscamos si la cirugía de GHL existe en Skyia\n      let pacienteEnSkyiaGlobal = skyiaRealAppointments.find(sd => \n        sd.horaInicio === horaGHL && ghlEv.title.toUpperCase().includes(sd.paciente.toUpperCase())\n      );\n\n      if (pacienteEnSkyiaGlobal) {\n        const estadoUpper = pacienteEnSkyiaGlobal.estado ? pacienteEnSkyiaGlobal.estado.toUpperCase() : \"\";\n\n        // Si la cirugía ya se marcó como REALIZADA en Skyia, la actualizamos en GHL\n        if (estadosAsistido.includes(estadoUpper)) {\n          if (ghlEv.appointmentStatus !== \"showed\") {\n            finalActions.push({ json: { action: \"updateStatus\", appointmentId: ghlEv.id, status: \"showed\", title: ghlEv.title } });\n          }\n        }\n        return; // La dejamos en paz\n      }\n\n      // Si la cita ya no está en Skyia y el slot está libre\n      if (ahoraEstaLibreEnSkyia) {\n        finalActions.push({ json: { action: \"delete\", appointmentId: ghlEv.id, title: ghlEv.title, reason: \"Slot liberado/reagendado\" } });\n        return;\n      }\n\n      // Si no es bloqueo y no está en Skyia\n      if (!pacienteEnSkyiaGlobal) {\n        finalActions.push({ json: { action: \"delete\", appointmentId: ghlEv.id, title: ghlEv.title, reason: \"No encontrado en Skyia\" } });\n      }\n    });\n\n    // --- NUEVOS AGENDAMIENTOS DE CIRUGÍAS ---\n    // Como tu nodo actual de GHL está vacío, el código detectará que \"exists\" es falso \n    // y enviará a crear todas las cirugías de golpe en la primera ejecución.\n    skyiaRealAppointments.forEach(sd => {\n      const startTimeStr = `${fechaISO}T${sd.horaInicio}:00${OFFSET}`;\n      const exists = ghlEvents.some(ge => ge.startTime === startTimeStr && ge.title.toUpperCase().includes(sd.paciente.toUpperCase()));\n      \n      if (!exists) {\n        finalActions.push({\n          json: {\n            action: \"create\", \n            calendarId: conf.calId, \n            startTime: startTimeStr,\n            endTime: `${fechaISO}T${sd.horaFin}:00${OFFSET}`, \n            title: `${sd.paciente} - ${sd.producto}`,\n            nombreCompleto: sd.paciente, \n            producto: sd.producto, \n            email: sd.mail || `sync_${sd.idPaciente}@skyia.com`, \n            telefono: sd.telefono || \"\", \n            idTurno: sd.idTurno\n          }\n        });\n      }\n    });\n\n    // --- DETECCIÓN DE BLOQUEOS MANUALES DEL QUIRÓFANO ---\n    profGrid.forEach(horaGrid => {\n      const estaLibre = misSlotsLibres.some(sf => sf.json.horaInicio.substring(0, 5) === horaGrid);\n      const tieneCita = skyiaRealAppointments.some(sd => horaGrid >= sd.horaInicio && horaGrid < sd.horaFin);\n\n      // Si Skyia dice que no está libre y no hay un paciente asignado a esa hora... es un bloqueo técnico de quirófano.\n      if (!estaLibre && !tieneCita) {\n        const startTimeStr = `${fechaISO}T${horaGrid}:00${OFFSET}`;\n        let [h, m] = horaGrid.split(':').map(Number);\n        m += 15;\n        if (m >= 60) { h += 1; m -= 60; }\n        const horaFinStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;\n        \n        const exists = ghlEvents.some(ge => ge.startTime === startTimeStr && ge.title.toUpperCase().includes(\"OCUPADO SKYIA\"));\n\n        if (!exists) {\n          finalActions.push({\n            json: {\n              action: \"create\", \n              calendarId: conf.calId, \n              startTime: startTimeStr,\n              endTime: `${fechaISO}T${horaFinStr}:00${OFFSET}`, \n              title: \"Ocupado Skyia\", \n              nombreCompleto: \"Bloqueo Quirófano\", \n              email: \"quirofano@skyia.local\", \n              telefono: \"\", \n              idTurno: `block_${currentSkyiaId}_${horaGrid.replace(':','')}`\n            }\n          });\n        }\n      }\n    });\n  });\n}\n\nif (finalActions.length === 0) {\n  return [{ json: { action: \"ninguna\", status: \"Sincronización Quirófano Perfecta\" } }];\n}\nreturn finalActions;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -640
+      ],
+      "id": "951966f0-e773-4f9f-9d88-574ab5a38759",
+      "name": "Cerebro Sincronizacion"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iteramos sobre todos los items que entran al nodo\nreturn items.map(item => {\n  const rawData = item.json;\n  // Limpieza inicial de caracteres no numéricos (excepto el +)\n  const rawPhone = rawData.telefono ? String(rawData.telefono).replace(/[^\\d+,\\/]/g, '') : \"\";\n\n  if (!rawPhone) {\n    return { \n      json: { ...rawData, telefonos_limpios: [], telefono_principal: \"\", telefono_fijo: \"\" } \n    };\n  }\n\n  const parts = rawPhone.split(/[\\/\\,]/);\n  let finalNumbers = [];\n\n  parts.forEach(num => {\n    let cleaned = num.trim();\n    \n    // --- REGLA 4: PASAPORTE UNIVERSAL (Status Quo Internacional) ---\n    // Si ya empieza con '+', lo aceptamos tal cual (sea +1, +593, +54, etc.)\n    if (cleaned.startsWith('+')) {\n      finalNumbers.push(cleaned);\n      return;\n    }\n\n    // --- REGLA 6: CÓDIGOS INTERNACIONALES SIN '+' (Ej: Uruguay 598, Ecuador 593) ---\n    // Si empieza con 5 y es largo (11+ dígitos), asumimos que es internacional sin el '+'\n    if (cleaned.startsWith('5') && cleaned.length >= 11) {\n      finalNumbers.push('+' + cleaned);\n      return;\n    }\n\n    // --- REGLA 3: ARGENTINA - CÓDIGO 1115 ---\n    if (cleaned.startsWith('1115')) {\n      const base = '11' + cleaned.substring(4);\n      finalNumbers.push('+549' + base);\n      finalNumbers.push('+54' + base);\n      return;\n    }\n\n    if (cleaned.startsWith('011')) {\n      const base = cleaned.substring(1);\n      finalNumbers.push('+549' + base);\n      finalNumbers.push('+54' + base);\n      return;\n    }\n\n    // --- REGLA 7: ARGENTINA - PREFIJO 15 ---\n    if (cleaned.startsWith('15')) {\n      const base = '11' + cleaned.substring(2);\n      finalNumbers.push('+549' + base);\n      return;\n    }\n\n    // --- REGLA 1: ARGENTINA - CAPITAL (11 + 8 dígitos) ---\n    if (cleaned.startsWith('11') && cleaned.length === 10) {\n      finalNumbers.push('+549' + cleaned);\n      finalNumbers.push('+54' + cleaned);\n      return;\n    }\n\n    // --- REGLA 5: ARGENTINA - INTERIOR (2, 3, 7 u 8) ---\n    // Si tiene 10 dígitos y empieza con estos números, es probable que sea AR\n    if (/^[2378]/.test(cleaned) && cleaned.length === 10) {\n      finalNumbers.push('+549' + cleaned); // Móvil interior\n      finalNumbers.push('+54' + cleaned);  // Fijo interior\n      return;\n    }\n\n    // --- CASO POR DEFECTO: ANÁLISIS DE PROBABILIDAD ---\n    if (!cleaned.startsWith('+')) {\n      if (cleaned.startsWith('54')) {\n        // Si empieza con 54 pero no tiene +, se lo ponemos\n        finalNumbers.push('+' + cleaned);\n      } else if (cleaned.length === 10) {\n        // Si tiene 10 dígitos exactos pero no encajó en las reglas anteriores,\n        // sigue habiendo alta probabilidad de que sea Argentina.\n        finalNumbers.push('+549' + cleaned);\n        finalNumbers.push('+54' + cleaned);\n      } else {\n        // Si es un número de longitud extraña, lo dejamos como está pero con el + preventivo\n        finalNumbers.push('+' + cleaned);\n      }\n    }\n  });\n\n  // Limpiamos duplicados y valores vacíos\n  const uniqueNumbers = [...new Set(finalNumbers)].filter(n => n.length > 5);\n\n  return {\n    json: {\n      ...rawData,\n      telefonos_limpios: uniqueNumbers,\n      telefono_principal: uniqueNumbers[0] || \"\",\n      telefono_fijo: uniqueNumbers[1] || \"\" \n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        -704
+      ],
+      "id": "15011db8-7745-45d4-bd46-2c507c9787d8",
+      "name": "Estandarizacion Numeros Argentinos"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/calendars/events/appointments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "calendarId",
+              "value": "={{ $json.calendarId }}"
+            },
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "contactId",
+              "value": "OlMibXDKwBTqvxrwHRhu"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $json.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $json.endTime }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "appointmentStatus",
+              "value": "confirmed"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2416,
+        -256
+      ],
+      "id": "4b2aa095-b035-4bd3-9e23-8840c669dbc5",
+      "name": "Set Ocupado Skyia",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://services.leadconnectorhq.com/calendars/events/{{ $json.appointmentId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        -912
+      ],
+      "id": "bf8856b8-2371-459e-8831-4d17dd44ade2",
+      "name": "Borrar cita GHL",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/calendars/events/appointments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "calendarId",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.calendarId }}"
+            },
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $json.contact.id }}"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.endTime }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.title }}"
+            },
+            {
+              "name": "appointmentStatus",
+              "value": "confirmed"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3248,
+        -896
+      ],
+      "id": "96ff323a-9e64-4ae7-9890-36c1c5076b53",
+      "name": "Crear cita en GHL",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/calendars/events/appointments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "calendarId",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.calendarId }}"
+            },
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $json.contact.id }}"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.endTime }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.title }}"
+            },
+            {
+              "name": "appointmentStatus",
+              "value": "confirmed"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4192,
+        -688
+      ],
+      "id": "e450bee1-f124-4b48-8097-4c1aee525972",
+      "name": "Crear cita en GHL 2",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/calendars/events/appointments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "calendarId",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.calendarId }}"
+            },
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $json.contact.id }}"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.endTime }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $('Estandarizacion Numeros Argentinos').item.json.title }}"
+            },
+            {
+              "name": "appointmentStatus",
+              "value": "confirmed"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4272,
+        -288
+      ],
+      "id": "e2a009a5-e356-4140-bc90-da0143e57f67",
+      "name": "Crear cita en GHL 3",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.resolvedContactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"customFields\": [\n     \n      {\"id\": \"especialidad_a_tratar\", \"value\": \"{{ $('Switch').item.json.producto }}\"}\n    ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3792,
+        -688
+      ],
+      "id": "c0c71a68-52fe-43e3-90e3-ad3e10ec3d15",
+      "name": "Resetear CF en CRM1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        3856,
+        112
+      ],
+      "id": "ad2cc708-b733-4f6e-b385-bbfca5c32ead",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "6WfMN447QGBPGsQF",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contacts[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"customFields\": [\n     \n      {\"id\": \"especialidad_a_tratar\", \"value\": \"{{ $('Switch').item.json.producto }}\"},\n      {\"id\": \"especialidad_dropdown\", \"value\": \"{{ $('Switch').item.json.producto }}\"}\n    ]\n} ",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3008,
+        -896
+      ],
+      "id": "5eb35b07-4aec-4012-9a94-c83cd2398e70",
+      "name": "Actualizacion Especialidad_a_tratar",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "be21ca92-fcd4-4d74-a775-94e24c142dc9",
+                    "leftValue": "={{ $('Switch').item.json.startTime }}",
+                    "rightValue": "={{ $('Schedule Trigger').first().json.timestamp }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Contactos pasados"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.total }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "id": "13e37a5c-b4a4-40b7-a408-4de918e3d2b1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Contacto en GHL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ee6f25b4-5fcc-4f6c-bae7-233458eded3b",
+                    "leftValue": "={{ $json.total }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No encontrado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2704,
+        -720
+      ],
+      "id": "cb042382-bcea-4e1f-8f28-4ab1d73e0378",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.skyia.ar/webhook/skyia_api?x=REEMPLAZAR_SKYIA_API_KEY&api=getAgendaTurnos&idAgenda=1&idSucursal=1&idRecurso=6&fechaDesde={{ $('Get Timestamp').item.json.skyia.desde }}&fechaHasta={{ $('Get Timestamp').item.json.skyia.hasta }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        -640
+      ],
+      "id": "c63c05dd-54ce-48fd-a071-11685b48473c",
+      "name": "Get Info QUIROFANO CRM Capilea",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "Yvk69MywEHyrt9oqUyVX"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        -640
+      ],
+      "id": "28f1ed6a-4f4a-4a60-b384-b247198113c8",
+      "name": "Get Events GHL quirofano",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"customFields\": [\n     \n      {\"id\": \"especialidad_a_tratar\", \"value\": \"{{ $('Switch').item.json.producto }}\"},\n      {\"id\": \"especialidad_dropdown\", \"value\": \"{{ $('Switch').item.json.producto }}\"}\n    ]\n} ",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4000,
+        -288
+      ],
+      "id": "bd9d652e-92cb-440c-8bab-c15567d14e32",
+      "name": "Actualizacion Especialidad_a_tratar1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Lectura de Skyia y GHL (quirófano)\n\nTurnos libres, eventos de quirófano en GHL y agenda de quirófano en Skyia.",
+        "height": 580,
+        "width": 1284,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -334,
+        -810
+      ],
+      "id": "c1323cd1-3f08-4025-9441-dd7d24d515fd",
+      "name": "Doc - Seccion 1"
+    },
+    {
+      "parameters": {
+        "content": "## Cerebro de sincronización\n\nAcciones para el calendario de quirófano.",
+        "height": 372,
+        "width": 548,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1010,
+        -842
+      ],
+      "id": "a00af3de-bbfc-4e5c-be99-707fdb9e1989",
+      "name": "Doc - Seccion 2"
+    },
+    {
+      "parameters": {
+        "content": "## Ejecución en GHL\n\nBorra, actualiza estados, crea bloqueos, contactos y citas.",
+        "height": 1364,
+        "width": 2500,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1954,
+        -1082
+      ],
+      "id": "f2a910de-dbe1-46eb-bbfa-6a2223397a3d",
+      "name": "Doc - Seccion 3"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 Vigilancia CRM Capilea Cirugias\n\n**Cliente:** Capilea (sucursal Belgrano)\n\n**Objetivo:** Variante de Vigilancia CRM exclusiva para el calendario de quirófano (cirugías).\n\n**Disparador:** Schedule Trigger por intervalo de minutos (valor por defecto del nodo).\n\n**Integraciones:** GoHighLevel (LeadConnector API v2), Skyia API\n\n**Credenciales a asignar al importar:**\n- Header Auth: Auth Belgrano\n- OpenAI: OpenAi account 2\n\n**Valores a reemplazar (secretos retirados del repo):**\n- `REEMPLAZAR_SKYIA_API_KEY`\n- `REEMPLAZAR_TOKEN_SKYIA`\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/capilea/vigilancia-crm-capilea-cirugias/README.md",
+        "height": 604,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -334,
+        -1806
+      ],
+      "id": "79f42ed6-0801-4e5e-b79b-95c94208824e",
+      "name": "Doc - Ficha del flujo"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del flujo: Vigilancia CRM Capilea Cirugias\n\n### 1. Lectura de datos\n- Turnos libres de Skyia (`Get URL Skyia`, `Get Free Slots CRM Capilea`), eventos del calendario de quirófano en GHL (`Get Events GHL quirofano`) y agenda de quirófano en Skyia (`Get Info QUIROFANO CRM Capilea`).\n\n### 2. Cerebro de sincronización\n- `Cerebro Sincronizacion` (configuración exclusiva de quirófano) genera las acciones `delete`, `updateStatus` y `create`.\n\n### 3. Ejecución en GHL\n- Idéntica a Vigilancia CRM: borrado, cambio de estado, bloqueos *Ocupado Skyia*, búsqueda/creación de contacto y creación de la cita.\n\n### ⚠️ Observaciones\n- Nodos sin conectar: `Sincronizacion Bloques`, `Comparador_bloques`, `Sincronizar info bloques` (versión anterior por bloques), `Get Info REVISACIONES CRM Capilea`, `Get Info MESOTERAPIA CRM Capilea1`, `Validacion contacto1`, `Analyze image`, `Notificar falla de sincronización`.",
+        "height": 532,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        446,
+        -1806
+      ],
+      "id": "fbb45312-af37-4bde-981e-15314d56dfce",
+      "name": "Doc - Descripcion del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get URL Skyia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Free Slots CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Get Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comparador_bloques": {
+      "main": [
+        []
+      ]
+    },
+    "Get Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL quirofano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get URL Skyia": {
+      "main": [
+        [
+          {
+            "node": "Get Free Slots CRM Capilea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sincronizar info bloques": {
+      "main": [
+        []
+      ]
+    },
+    "Crear contacto en INVERS1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar contacto en INVERS1": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validacion contacto1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Contacto vs Ocupado": {
+      "main": [
+        [
+          {
+            "node": "Estandarizacion Numeros Argentinos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Ocupado Skyia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Info REVISACIONES CRM Capilea": {
+      "main": [
+        []
+      ]
+    },
+    "Sincronizacion Bloques": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Borrar cita GHL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contacto vs Ocupado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Resetear CF en CRM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Actualizacion Especialidad_a_tratar1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Cerebro Sincronizacion": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estandarizacion Numeros Argentinos": {
+      "main": [
+        [
+          {
+            "node": "Buscar contacto en INVERS1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear cita en GHL": {
+      "main": [
+        []
+      ]
+    },
+    "Crear cita en GHL 2": {
+      "main": [
+        []
+      ]
+    },
+    "Resetear CF en CRM1": {
+      "main": [
+        [
+          {
+            "node": "Crear cita en GHL 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar falla de sincronización": {
+      "main": [
+        []
+      ]
+    },
+    "Actualizacion Especialidad_a_tratar": {
+      "main": [
+        [
+          {
+            "node": "Crear cita en GHL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Actualizacion Especialidad_a_tratar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear contacto en INVERS1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Info QUIROFANO CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Cerebro Sincronizacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL quirofano": {
+      "main": [
+        [
+          {
+            "node": "Get Info QUIROFANO CRM Capilea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizacion Especialidad_a_tratar1": {
+      "main": [
+        [
+          {
+            "node": "Crear cita en GHL 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "errorWorkflow": "2nO4EfS90U7HC6hG"
+  },
+  "versionId": "699acf03-b4b1-47f7-b729-55d7c215520a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "039fce773344de013634923d5a2bb656abb0045ca113d3fd7a7a61d949da1a5e"
+  },
+  "nodeGroups": [],
+  "id": "YAZS50SiRNMmsWKR",
+  "tags": [
+    {
+      "updatedAt": "2026-04-22T01:37:42.855Z",
+      "createdAt": "2026-04-22T01:37:42.855Z",
+      "id": "0wWWdYshBYrVSsTd",
+      "name": "Belgrano"
+    }
+  ]
+}

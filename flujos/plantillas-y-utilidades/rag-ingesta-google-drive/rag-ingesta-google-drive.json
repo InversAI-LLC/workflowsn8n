@@ -1,0 +1,1698 @@
+{
+  "name": "RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## En caso de subir una imagen:\n\nEl id de la imagen es el id de la carpeta, entonces todas las imagenes de esa carpeta serán asignadas a l mismo id. Esto hará que en la base de datos se sepa la relación entre imagenes",
+        "height": 240
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        1072
+      ],
+      "typeVersion": 1,
+      "id": "864c59a2-dbc1-4394-b240-2d76251cba9a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1376,
+        944
+      ],
+      "id": "b87247e6-e9cc-40c9-8427-d6d72f66e898",
+      "name": "Download Image",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Describe o Transcribe detalladamente lo que hay en la imagen. Incluye todo lo que contenga la imagen",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -992,
+        944
+      ],
+      "id": "c132a976-8c30-4e4f-826f-d39a89218879",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "QhcWPaCREGKenTHF",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f47d2214-2076-409d-a624-185ee3b4cc40",
+              "name": "text",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "a12f38d6-ff03-4d0c-afcb-fd697c9217d7",
+              "name": "docId",
+              "value": "={{ $('Loop Over Items1').item.json.url.split('/').pop() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        944
+      ],
+      "id": "08422d4d-781c-4a45-8f5c-9f2f520391dd",
+      "name": "Texto Imagen"
+    },
+    {
+      "parameters": {
+        "chunkSize": 600,
+        "chunkOverlap": 75,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "id": "66fd20eb-0105-40a9-a0e9-b13c8782d4c4",
+      "name": "Document Chunker1",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        960,
+        944
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "id": "6e510145-dc53-4b1c-90f2-20cc11a90154",
+      "name": "OpenAI Embeddings Generator",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        720,
+        736
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "QhcWPaCREGKenTHF",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $('TextConvergence').item.json.texto }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "doc_id",
+                "value": "={{ $('TextConvergence').item.json.docId }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e1478298-1260-4646-97d3-302b07b5c773",
+      "name": "Document Section Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        928,
+        720
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lista de las URLs de tus carpetas de Google Drive\nconst folderUrls = [ \n  \"https://drive.google.com/drive/folders/16n-Hw_qBTVyKrpES0OeIj0Bnu_TCclNG\"\n  // Añade todas las URLs que necesites aquí\n  // Ya se han cargado el mega prompt\n];\n\n// Devolvemos la lista para que los siguientes nodos puedan usarla\nreturn folderUrls.map(url => ({ url: url }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5280,
+        672
+      ],
+      "id": "bd0d1bdd-95ea-4811-a848-1f990758579a",
+      "name": "Code URLs1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -5024,
+        672
+      ],
+      "id": "453aee6b-70e2-4b9d-be7e-9f542d45fba6",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c7f9aa91-60c9-4447-a0ee-981ffa6d4b33",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "70d62dd8-64dc-4ff2-b037-07c043294ca6",
+              "name": "docId",
+              "value": "={{ $('Download PDF1').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -336,
+        624
+      ],
+      "id": "b46c2138-c581-4f70-8839-7303ecc88e69",
+      "name": "Texto del pdf"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -880,
+        624
+      ],
+      "id": "b3c6d605-c7e2-4068-9a8d-3055c108faf8",
+      "name": "Download PDF1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        624
+      ],
+      "id": "d5aa01c8-b0cf-428b-b454-a5e05c0cc139",
+      "name": "Extract from File2"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "mongoCollection": {
+          "__rl": true,
+          "value": "embeddings",
+          "mode": "list",
+          "cachedResultName": "embeddings"
+        },
+        "vectorIndexName": "data_index",
+        "options": {}
+      },
+      "id": "73d2c8e8-1fa1-4582-80b8-756390b092d9",
+      "name": "MongoDB Vector Store Inserter1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
+      "position": [
+        864,
+        336
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "mongoDb": {
+          "id": "SI4PBqYS7VWzNuKu",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2336,
+        288
+      ],
+      "id": "f1197920-1358-4b2d-8bcd-9164c0552e97",
+      "name": "Download Excel xls1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        288
+      ],
+      "id": "2e71ca61-74b3-4acb-a5ed-245f50a76f2b",
+      "name": "Extract from File4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recoge todos los items de entrada (cada item es una fila de la hoja de cálculo)\nconst items = $input.all();\nlet fullText = '';\n\n// Itera sobre cada fila\nfor (const item of items) {\n  // Para cada fila, convierte el objeto {columna: valor} en un array de strings \"columna: valor\"\n  const rowText = Object.entries(item.json)\n    .map(([key, value]) => `${key}: ${value}`) \n    .join(', '); // Une todas las celdas de la fila con una coma\n\n  // Añade la línea de texto de la fila al texto completo, con un salto de línea al final\n  fullText += rowText + '\\n'; \n}\n\n// Devuelve un solo item con un campo 'extracted_text' que contiene todo el texto unificado\nreturn [{ json: { extracted_text: fullText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        224
+      ],
+      "id": "8b023993-9419-4217-9fb3-cf62616b4441",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -4256,
+        176
+      ],
+      "id": "ddf62f3c-8286-4f5b-9d77-7b721670f59e",
+      "name": "Share file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "application/vnd.google-apps.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "14f9b44d-1368-458c-ae95-f46154556d16"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Google Doc"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "88b9a0ce-87b3-4266-833f-34d8125865f7",
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "application/vnd.google-apps.spreadsheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sheets"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "074a645a-e81c-43d5-9337-59b5ad729ed9",
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Excel"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0e69d70a-f483-4d2a-a9c4-666433a9da1a",
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "application/vnd.ms-excel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Excel 97-2003"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "38db9131-3b53-4555-bc58-56c4a809a36c",
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "text/csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CSV"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2c7fdeb2-5bab-4dc4-b8ed-0c0bcda84712",
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "22c3e80d-1d1b-4fb0-bb31-4433918a5295",
+                    "leftValue": "={{ $('Search files and folders1').item.json.mimeType }}",
+                    "rightValue": "image/",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -3600,
+        128
+      ],
+      "id": "523acf27-a660-4e98-8421-88a68122aac8",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f18b4b68-b7c8-4cad-b4e3-58cf3b4f5aaf",
+              "name": "texto",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "039a37b6-bb26-46c6-9be3-e51a428576fe",
+              "name": "docId",
+              "value": "={{ $json.docId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        128
+      ],
+      "id": "8d57af03-aa45-4241-a4f8-51ace6bac6c3",
+      "name": "TextConvergence"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2352,
+        64
+      ],
+      "id": "e9ce8940-818b-4928-800c-eeaaf2e61fca",
+      "name": "Download Excel xls",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        64
+      ],
+      "id": "d2c241b2-4cd7-4df2-9572-586ca5556d74",
+      "name": "Extract from File3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -3856,
+        64
+      ],
+      "id": "50e1eb70-47c7-4873-be90-4e6ff5969281",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d62db935-ba03-44fc-9e0e-b851261de7cd",
+              "leftValue": "={{ $json.shared }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4544,
+        64
+      ],
+      "id": "b5723077-8ea2-46f2-94b8-026029744a7b",
+      "name": "If shared"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=(mimeType='application/vnd.google-apps.document' OR mimeType='application/pdf' OR mimeType='text/plain' OR mimeType='application/json' OR mimeType='application/vnd.ms-excel' OR mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' OR mimeType contains 'image/' OR mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' OR mimeType='application/vnd.google-apps.spreadsheet' OR mimeType='text/csv') and '{{ $json.url.split('/').pop() }}' in parents",
+        "returnAll": true,
+        "filter": {},
+        "options": {
+          "fields": [
+            "id",
+            "mimeType",
+            "name",
+            "webViewLink",
+            "shared"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -4832,
+        64
+      ],
+      "id": "984b12c1-caad-4354-be7b-8c6893d6f823",
+      "name": "Search files and folders1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recoge todos los items de entrada (cada item es una fila de la hoja de cálculo)\nconst items = $input.all();\nlet fullText = '';\n\n// Itera sobre cada fila\nfor (const item of items) {\n  // Para cada fila, convierte el objeto {columna: valor} en un array de strings \"columna: valor\"\n  const rowText = Object.entries(item.json)\n    .map(([key, value]) => `${key}: ${value}`) \n    .join(', '); // Une todas las celdas de la fila con una coma\n\n  // Añade la línea de texto de la fila al texto completo, con un salto de línea al final\n  fullText += rowText + '\\n'; \n}\n\n// Devuelve un solo item con un campo 'extracted_text' que contiene todo el texto unificado\nreturn [{ json: { extracted_text: fullText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        48
+      ],
+      "id": "757509e0-2f39-47bd-8aee-c1dc29ab1748",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.name.split('.').first() }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1KnU5LDdgbUO2RcNsqwlsZlh6TwaFrLPA",
+          "mode": "list",
+          "cachedResultName": "CorpusRAG",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1KnU5LDdgbUO2RcNsqwlsZlh6TwaFrLPA"
+        },
+        "options": {
+          "appPropertiesUi": {
+            "appPropertyValues": [
+              {
+                "key": "mimeType",
+                "value": "application/vnd.google-apps.spreadsheet"
+              }
+            ]
+          },
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "mimeType",
+                "value": "application/vnd.google-apps.spreadsheet"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1824,
+        -96
+      ],
+      "id": "7f29ea17-f0b6-4979-bc73-f64775ff4376",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.docId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "value": "={\n  \"name\": \"{{ $('Download file').first().binary.data.fileName.split('.').first() }}\",\n  \"mimeType\": \"application/vnd.google-apps.spreadsheet\",\n  \"parents\": [\"{{ $('Loop Over Items1').item.json.url.split('/').pop() }}\"]\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1440,
+        -128
+      ],
+      "id": "e48f94b1-f5a5-4820-b6a7-816a807cc447",
+      "name": "HTTP Request1",
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "RnJnp2bsjeTX1pgI",
+          "name": "Google account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.docId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2144,
+        -128
+      ],
+      "id": "26afc881-95e4-4b4f-8a9f-abc13c44e78c",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wmlM7Dw5CAMX4AFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8d4ad8f-3769-46a6-8215-7be3e11e4a76",
+              "name": "docId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "261f6693-21bb-4c5d-b911-1d0f5e9fd329",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "d5f32c00-4dc8-4cf6-99f4-55ca94dd6f02",
+              "name": "mimeType",
+              "value": "={{ $json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "1b80499f-bf4e-46f2-be9b-e8cd104ad3c5",
+              "name": "link",
+              "value": "={{ $json.webViewLink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2368,
+        -144
+      ],
+      "id": "0d3a6899-892a-48aa-9614-1143d7834d4f",
+      "name": "doc info1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recoge todos los items de entrada (cada item es una fila de la hoja de cálculo)\nconst items = $input.all();\nlet fullText = '';\n\n// Itera sobre cada fila\nfor (const item of items) {\n  // Para cada fila, convierte el objeto {columna: valor} en un array de strings \"columna: valor\"\n  const rowText = Object.entries(item.json)\n    .map(([key, value]) => `${key}: ${value}`) \n    .join(', '); // Une todas las celdas de la fila con una coma\n\n  // Añade la línea de texto de la fila al texto completo, con un salto de línea al final\n  fullText += rowText + '\\n'; \n}\n\n// Devuelve un solo item con un campo 'extracted_text' que contiene todo el texto unificado\nreturn [{ json: { extracted_text: fullText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -240
+      ],
+      "id": "e8efa47b-f510-421e-9ad7-888aa722b8c5",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Search files and folders1').item.json.id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.properties.title }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -768,
+        -240
+      ],
+      "id": "8615ff3a-166e-4100-a29b-77a36a06938c",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "v1wHFSU2xBSpLRpJ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sheets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        -240
+      ],
+      "id": "a95e995e-1b57-48da-a813-c1090d3edea1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0fbe3f0-23ed-41b1-a7ae-956f666a6299",
+              "name": "text",
+              "value": "={{ $json.extracted_text }}",
+              "type": "string"
+            },
+            {
+              "id": "1c700c80-3672-4d14-a5b9-d2f640a0ab38",
+              "name": "docId",
+              "value": "={{ $('doc info').first().json.docId }}",
+              "type": "string"
+            },
+            {
+              "id": "5a91ec0d-9146-497e-9249-7a8017c8fd5b",
+              "name": "sheetName",
+              "value": "={{ $('Split Out').first().json.properties.title }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        -240
+      ],
+      "id": "a7975407-69d6-4573-b00e-ac0e1c1378ff",
+      "name": "Texto de cada sheet de Excel"
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.docId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "sheets.properties.title"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1440,
+        -416
+      ],
+      "id": "a87f45e5-9da3-4d8e-a384-74acc5586152",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "RnJnp2bsjeTX1pgI",
+          "name": "Google account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1168,
+        -416
+      ],
+      "id": "df7c1f72-078b-48f8-932b-684a353969d0",
+      "name": "Loop Over Sheets"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1664,
+        -416
+      ],
+      "id": "f1e9dfc5-fa66-47e8-9a3a-bb6ba35636a2",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8d4ad8f-3769-46a6-8215-7be3e11e4a76",
+              "name": "docId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "261f6693-21bb-4c5d-b911-1d0f5e9fd329",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "d5f32c00-4dc8-4cf6-99f4-55ca94dd6f02",
+              "name": "mimeType",
+              "value": "={{ $json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "1b80499f-bf4e-46f2-be9b-e8cd104ad3c5",
+              "name": "link",
+              "value": "={{ $json.webViewLink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2016,
+        -432
+      ],
+      "id": "27dbc7a5-ae38-4a84-8d89-70e443cca0ec",
+      "name": "doc info"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33a412da-e9bb-48cd-b125-7e0ee85eaf93",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "52f72790-ed28-48d2-bcf9-d340441fb2ae",
+              "name": "docId",
+              "value": "={{ $json.docId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -432
+      ],
+      "id": "f19f2de4-c217-415b-be32-2e5218dca5b5",
+      "name": "Texto Docs Sheets"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $('Search files and folders1').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        -832
+      ],
+      "id": "589c11ce-45b1-47d9-a945-f0497f6f9b03",
+      "name": "Get a document1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "hH6piqeNaC9bibVR",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f8ef9d9-6f36-4ac6-ab65-f7d0e9f8e7fa",
+              "name": "text",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "5ac8030c-c23d-4bf9-a849-8d574dada4cc",
+              "name": "docId",
+              "value": "={{ $json.documentId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -848
+      ],
+      "id": "9f317463-0e71-4269-bcd0-321800e5416d",
+      "name": "Texto del doc"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "0d9ceee0-5e99-4498-8f9d-dfe488b7e736",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -5488,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Carpetas de Google Drive\n\nLista de carpetas, búsqueda de archivos y permisos de compartir.",
+        "height": 948,
+        "width": 1812,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -5518,
+        -106
+      ],
+      "id": "1d6432bf-2be4-4f16-bdb2-2a6b7cfa5dd6",
+      "name": "Doc - Seccion 1"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Extracción de texto por tipo de archivo\n\nDocs, Sheets, Excel, PDF e imágenes a texto.",
+        "height": 2360,
+        "width": 3700,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3630,
+        -1018
+      ],
+      "id": "9d262504-c2e7-4024-a3a5-12fb4edceebf",
+      "name": "Doc - Seccion 2"
+    },
+    {
+      "parameters": {
+        "content": "## 3. Indexación en MongoDB Atlas\n\nChunking, embeddings y guardado en el vector store.",
+        "height": 1156,
+        "width": 548,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        562,
+        -42
+      ],
+      "id": "1ed3e890-35b4-4302-aeda-5e648c6cc32b",
+      "name": "Doc - Seccion 3"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 RAG\n\n**Cliente:** Utilidad compartida (usada por Tag Markets)\n\n**Objetivo:** Sub-flujo de ingesta: lee carpetas de Google Drive, extrae el texto de cada archivo y lo indexa como embeddings en MongoDB Atlas.\n\n**Disparador:** *Execute Workflow Trigger*: se ejecuta como sub-flujo (por ejemplo desde `Call RAG` en el agente de Tag Markets).\n\n**Integraciones:** Google Drive / Docs / Sheets, OpenAI (embeddings y visión), MongoDB Atlas Vector Search\n\n**Credenciales a asignar al importar:**\n- Google Docs OAuth2: Google Docs account\n- Google Drive OAuth2: Google Drive account\n- Google OAuth2: Google account\n- Google Sheets OAuth2: Google Sheets account\n- MongoDB: MongoDB account\n- OpenAI: OpenAi account\n\n**Valores a reemplazar (secretos retirados del repo):**\n- Ninguno\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/plantillas-y-utilidades/rag-ingesta-google-drive/README.md",
+        "height": 724,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -5518,
+        -1862
+      ],
+      "id": "645e1428-10bc-4f04-903a-204b6e736208",
+      "name": "Doc - Ficha del flujo"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del flujo: RAG\n\n### 1. Carpetas y archivos\n- `Code URLs1` define el array de URLs de carpetas de Drive a cargar.\n- `Search files and folders1` lista los archivos; si no están compartidos, `Share file2` los comparte.\n\n### 2. Extracción por tipo (`Switch`)\n- Google Docs → `Get a document1`. Google Sheets → lectura hoja por hoja. Excel (xls/xlsx) → se convierte a Google Sheets en la carpeta *CorpusRAG* o se extrae directo.\n- PDF → `Extract from File2`. Imágenes → `Analyze image` (GPT-4o-mini) describe la imagen; todas las imágenes de una carpeta comparten el id de la carpeta.\n\n### 3. Indexación\n- `TextConvergence` unifica `texto` + `docId`. `Document Chunker1` (splitter markdown) → `Document Section Loader1` → `MongoDB Vector Store Inserter1` con embeddings de OpenAI.\n\n### ⚠️ Observaciones\n- No evita duplicados: subir la misma carpeta dos veces duplica los vectores (ver nota *Mejoras* en el flujo de Tag Markets).",
+        "height": 556,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -4738,
+        -1862
+      ],
+      "id": "b15e54af-9fb7-48dd-9bec-0b6658731c37",
+      "name": "Doc - Descripcion del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a document1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "doc info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "doc info1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Excel xls",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Excel xls1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download PDF1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Texto Imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto Imagen": {
+      "main": [
+        [
+          {
+            "node": "TextConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Excel xls": {
+      "main": [
+        [
+          {
+            "node": "Extract from File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Excel xls1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Texto de cada sheet de Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File3": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File4": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto del pdf": {
+      "main": [
+        [
+          {
+            "node": "TextConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto del doc": {
+      "main": [
+        [
+          {
+            "node": "TextConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TextConvergence": {
+      "main": [
+        [
+          {
+            "node": "MongoDB Vector Store Inserter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Texto del pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "doc info": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If shared": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Share file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Sheets": {
+      "main": [
+        [
+          {
+            "node": "Texto Docs Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto de cada sheet de Excel": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto Docs Sheets": {
+      "main": [
+        [
+          {
+            "node": "TextConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "doc info1": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings Generator": {
+      "ai_embedding": [
+        [
+          {
+            "node": "MongoDB Vector Store Inserter1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders1": {
+      "main": [
+        [
+          {
+            "node": "If shared",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document1": {
+      "main": [
+        [
+          {
+            "node": "Texto del doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Chunker1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Section Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Section Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "MongoDB Vector Store Inserter1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Vector Store Inserter1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code URLs1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Search files and folders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Code URLs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "37876b35-682d-4f7a-8d23-b5c3bd68c193",
+  "meta": {
+    "instanceId": "60283bb5c3e7928bee00940388cd334e66794cc42c5b22558aa93e6aa3660b33"
+  },
+  "nodeGroups": [],
+  "id": "rVqNtcvQsqKFvq0H",
+  "tags": []
+}

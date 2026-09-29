@@ -1,0 +1,2425 @@
+{
+  "name": "Flujo_AgenteMulticanal",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "26a3d85c-0815-48ff-85ce-713129a1107c",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "leftValue": "={{ $('Paso 1: Obtener archivo').first().binary.data.mimeType }}",
+                    "rightValue": "mp4"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "840b95b8-6559-4fb7-b32c-651451d6d0d2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "leftValue": "={{ $('Paso 1: Obtener archivo').first().binary.data.mimeType }}",
+                    "rightValue": "image"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3e7a07f9-b785-450c-8c68-f6b276838503",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "leftValue": "={{ $('Paso 1: Obtener archivo').first().binary.data.mimeType }}",
+                    "rightValue": "application"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Document"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4a7ed657-aa5d-4aa7-b5e5-4f09be2ec9e0",
+      "name": "Route Types1",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -10928,
+        -464
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "8e2ea1c5-ebce-4504-a01f-07cec58a07a5",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST,OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -12048,
+        -736
+      ],
+      "webhookId": "8e2ea1c5-ebce-4504-a01f-07cec58a07a5",
+      "id": "4b1e40a5-cb80-4704-b0f5-0327d61f7422"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Que hay en esta imagen? Describe a detalle",
+        "inputType": "base64",
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "id": "d08762af-7910-4c54-a6bc-1e169a8bbe32",
+      "name": "Analyze image1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -10192,
+        -448
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "6WfMN447QGBPGsQF",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "78b0853b-0f70-4b45-9d0c-bbcd0e2a80a5",
+      "name": "Extract from PDF1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -9952,
+        48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "options": {}
+      },
+      "id": "0bdcad90-351b-4181-b6be-c4bd14c966f3",
+      "name": "Extract from XLS1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -10128,
+        224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "id": "5bfd0ca0-79e4-4d42-9f79-b3dbc145c83e",
+      "name": "Extract from XLSX1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -10128,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72ae0d20-616a-4a65-9b14-53bf53656091",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5abea4a9-785e-4a04-9ddf-f44c4b0c56fb",
+      "name": "Map JSON1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -9872,
+        208
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "let requests = $(\"Download Document1\").all()\n\nrequests.forEach((request) => {\n  let mime_type = request.json.mime_type\n\n  if (\n    mime_type === \"text/calendar\" || \n    mime_type === \"application/ics\" || \n    mime_type === \"text/x-calendar\"\n  ) {\n    request.json.mime_type = \"mapped/calendar\"\n  }\n\n  if (\n    mime_type === \"application/xml\" || \n    mime_type === \"text/xml\") {\n    request.json.mime_type = \"mapped/xml\"\n  }\n\n  if (!mime_type) {\n    request.json.mime_type = $('Gets Document Source URL').first().json.mime_type\n  }\n})\n\nreturn requests;"
+      },
+      "id": "c1546813-ccbb-4d70-8fd8-e8ebf5b8d481",
+      "name": "Map file extensions1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -10640,
+        -64
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "da68bcca-a2a6-4676-8649-6fb1b664e44c",
+              "name": "text",
+              "type": "string",
+              "value": "=Parsed text: {{ $json.text || $json.data || $json }}\n\nCaption text: {{ $('Route Types').item.json.messages[0].document.caption }}\n\nMimeType: {{ $('Gets WhatsApp Document Source URL').item.json.mime_type }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "566d2c49-6e10-44fd-84f5-42d8f8850243",
+      "name": "Map document prompt1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -9568,
+        -176
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "14e23243-cd44-4cb1-99bd-9e6905d511ad",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/csv"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CSV"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "6d7616c5-6bdd-47b7-923e-639491d15a4e",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/html"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "HTML"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "a2174e02-378a-41ff-b269-61f4fc3f1de9",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "=mapped/calendar"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Calendar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f3b406d7-362d-473e-8edd-c3e5f2d9c44c",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/rtf"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "RTF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "64dd4658-54e7-4453-adbc-7067dffcd555",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/plain"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "TXT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "7540a3ab-b48e-4bec-94e9-a5dfc3d65a4c",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "mapped/xml"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "XML"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "88b618fd-9a88-491e-91dd-c5fc9efa36e3",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/pdf"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "9c4d90aa-b4ea-4a63-b15e-666899c8360e",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/json"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "JSON"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "9baa7c88-3950-4099-8498-99a4640b95e7",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/vnd.ms-excel"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "XLS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "b83e540c-ba1e-42d0-ac83-f675e25e6aea",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "XLSX"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "ea3be820-2ead-4ec2-b292-42d3c7804b55",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "ELSE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5ed73e47-f003-48f3-b048-c1ecf0d54459",
+      "name": "Route Document Types1",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -10336,
+        -224
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener la respuesta completa del agente de IA\nconst fullMessage = $input.item.json.output;\n\n// Dividir el texto en oraciones para un corte más natural\nconst sentences = fullMessage.match(/[^.!?]+[.!?\\n\\n]+/g) || [fullMessage];\n\n// Calcular cuántas oraciones irán en cada parte\nconst totalSentences = sentences.length;\nconst sentencesPerPart = Math.ceil(totalSentences / 3);\n\n// Crear un objeto para contener las tres partes\nconst messageObject = {};\n\n// Iterar 3 veces para crear las 3 propiedades\nfor (let i = 0; i < 3; i++) {\n  const start = i * sentencesPerPart;\n  const end = start + sentencesPerPart;\n  const partText = sentences.slice(start, end).join(' ').trim();\n\n  // Asignar a una clave diferente en cada iteración (MessagePart1, MessagePart2...)\n  // Si una parte está vacía, se asignará un string vacío.\n  messageObject['MessagePart' + (i + 1)] = partText;\n}\n\n// Devolver un ÚNICO ítem con las tres claves\nreturn [{ json: messageObject }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6736,
+        -576
+      ],
+      "id": "3c74438d-6845-4977-af96-aa25c3b263f7",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -5424,
+        -720
+      ],
+      "id": "bf66cf81-395b-4b50-953b-2c9f2a8d82e6",
+      "name": "Wait1",
+      "webhookId": "d13d426e-992b-4c68-b2d6-73df795ef916"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook1').item.json.body.customData.message_body }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "4d004c95-7e44-4b2d-862d-d2609d1ce446"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "eb8f1aa4-a19d-430b-b55a-3011ca7d180c",
+                    "leftValue": "={{ $('Webhook1').item.json.body.customData.message_attachments }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Adjunto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -11408,
+        -944
+      ],
+      "id": "cc606f13-5717-4d44-9963-fb263ed589e4",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -8928,
+        -672
+      ],
+      "id": "24abf449-edb2-4aa3-a8f3-aeb12906eedf",
+      "name": "Embeddings OpenAI",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "6WfMN447QGBPGsQF",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "mongoCollection": {
+          "__rl": true,
+          "value": "embeddings",
+          "mode": "list",
+          "cachedResultName": "embeddings"
+        },
+        "vectorIndexName": "data_index",
+        "prompt": "={{ $json.texto }}",
+        "topK": 6,
+        "options": {}
+      },
+      "id": "8a45899a-f048-4500-b3b1-ec9639a70862",
+      "name": "MongoDB Vector Search",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
+      "position": [
+        -8928,
+        -960
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "mongoDb": {
+          "id": "yhclfzLtd8qhpKsC",
+          "name": "MongoDB account DB AgenteSoporte"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Prompt Final').item.json.user_prompt }}",
+        "options": {
+          "systemMessage": "=Tarea:\n\nEres un asistente de soporte técnico experto de la empresa Invers. Tu nombre es Camila, y siempre estás dispuesta a ayudar el cliente. Tu misión es responder las preguntas del usuario basándote estricta y únicamente en el contexto que se te proporciona. No inventes, supongas ni agregues información que no esté en el contexto. Solo si la sección de contexto está vacía puedes mencionar que no has encontrado la información. Caso contrario usa siempre lo que esté en la parte de \"Contexto:\". Tu características como agente son las siguientes:Características clave de Camila: Personalidad: Estratégica, profesional, cercana y resolutiva.   Tono: Claro, directo, empático, con lenguaje humano y sin sonar como robot.   Idioma: Políglota. Siempre responde en el idioma que le escriben.   Estilo: Usa emojis para hacer la conversación más amena y llamativa, sin perder profesionalismo.   Nombre del agente: Camila   Edad ficticia: 32 años "
+        }
+      },
+      "id": "6d93b48e-09cf-4dfc-b89c-6df39375df44",
+      "name": "Knowledge Base Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -8032,
+        -960
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.5
+        }
+      },
+      "id": "1b4acb95-9f16-4b12-97a9-57c992687694",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -8160,
+        -640
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "6WfMN447QGBPGsQF",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=memory_{{ $('Webhook1').item.json.body.customData.contactID }}",
+        "collectionName": "memory",
+        "databaseName": "ChatMemory"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        -7952,
+        -640
+      ],
+      "id": "98059107-746e-4610-b2de-1bd16bc9f1b5",
+      "name": "MongoDB Chat Memory1",
+      "credentials": {
+        "mongoDb": {
+          "id": "Xvq12yX7UWBe6RKv",
+          "name": "MongoDB account ChatMemory"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "document.pageContent",
+              "renameField": true,
+              "outputFieldName": "textoPrompt"
+            }
+          ]
+        },
+        "options": {
+          "mergeLists": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -8592,
+        -960
+      ],
+      "id": "a6c327b3-ad58-465b-825a-af33a15d16f2",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5cc02d19-7e50-461d-9ed4-d21d104d946e",
+              "name": "user_prompt",
+              "value": "=Basado en el siguiente contexto, responde a la pregunta del usuario.\n\nContexto Relevante:\n---\n{{ $json.textoPrompt }}\n---\n\nPregunta del Usuario: {{ $('MessageConvergence').item.json.texto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8384,
+        -960
+      ],
+      "id": "20ace6dd-2023-47db-8dba-5a074ad53c97",
+      "name": "Prompt Final"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "86780b3c-8f0b-42d2-b9fd-b4b21aa97c1f",
+      "name": "Transcribe a recording",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -10192,
+        -752
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "6WfMN447QGBPGsQF",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3db87376-f30c-434e-954d-105bfb12c899",
+              "leftValue": "={{ $('Webhook1').item.json.body.customData.message_attachments }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -7584,
+        -816
+      ],
+      "id": "0c905785-edd6-4ef2-a3e3-873b0e8b0993",
+      "name": "ExistsAttachment"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1fdd8ee-74d8-4b7d-9107-b3210ecd94ee",
+              "leftValue": "={{ $('Paso 1: Obtener archivo').first().binary.data.mimeType }}",
+              "rightValue": "mp4",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -7072,
+        -1104
+      ],
+      "id": "d98b6f85-97e3-40cf-bea4-675eefb9edaf",
+      "name": "IsItAnAudio?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "20b18d8c-d2a0-4286-a43a-885ba2eb0ce4",
+              "leftValue": "={{ $json.MessagePart1 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6464,
+        -608
+      ],
+      "id": "6ff8c0d2-20be-4d8a-8248-ec38f889caee",
+      "name": "ExistsPart1?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "20b18d8c-d2a0-4286-a43a-885ba2eb0ce4",
+              "leftValue": "={{ $('Code').item.json.MessagePart3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5232,
+        -624
+      ],
+      "id": "6272f574-a9ea-4635-9a25-861b6a2144fb",
+      "name": "ExistsPart3?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_GHL_PRIVATE_INTEGRATION"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{ $('Webhook1').item.json.body.customData.contactID }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $('Corregir Canal de Respuesta').item.json.Canal_Corregido }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.MessagePart1 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -6240,
+        -736
+      ],
+      "id": "edab3619-9bf3-4aa8-b5b8-9e756dcfaa8b",
+      "name": "SendPart1toCRM"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_GHL_PRIVATE_INTEGRATION"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{ $('Webhook1').item.json.body.customData.contactID }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $('Corregir Canal de Respuesta').item.json.Canal_Corregido }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Code').item.json.MessagePart2 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -5616,
+        -720
+      ],
+      "id": "492f83c3-5696-474e-87a5-82c46affacc8",
+      "name": "SendPart2toCRM"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_GHL_PRIVATE_INTEGRATION"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{ $('Webhook1').item.json.body.customData.contactID }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $('Corregir Canal de Respuesta').item.json.Canal_Corregido }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Code').item.json.MessagePart3 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4992,
+        -704
+      ],
+      "id": "ae0ef7e9-d63f-4745-a5fb-4646ffcdec27",
+      "name": "SendPart3toCRM"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "76da382a-3bb8-4e75-a5aa-f7aafe4a9d5e",
+              "name": "text",
+              "value": "={{ $('Webhook1').item.json.body.customData.message_body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10384,
+        -960
+      ],
+      "id": "70782b4d-d732-4dc1-b635-6fec97e7f3b9",
+      "name": "MensajeTexto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bad5c3b7-c5a8-4b80-8c42-de2042628110",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9584,
+        -752
+      ],
+      "id": "085ad73a-ea45-4e35-a677-7a49a0420242",
+      "name": "MensajeAudio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "48af2dcc-4ce9-45fc-abfc-54f803930092",
+              "name": "text",
+              "type": "string",
+              "value": "=Descripcion de la imagen: {{ $json.content }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2efadeaf-6159-4071-8031-f1a67d1318d0",
+      "name": "MensajeImagen",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -9584,
+        -448
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9ea049c8-5e00-41d1-88b8-5ad1a6543abb",
+              "name": "texto",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9136,
+        -960
+      ],
+      "id": "02c97c4d-ced0-49b6-852e-a57f21eb4d50",
+      "name": "MessageConvergence"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "686b96b5-1502-4fb0-998f-34352e458f9a",
+              "leftValue": "={{ $('Webhook1').item.json.body.customData.message_body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -7344,
+        -1088
+      ],
+      "id": "099df678-00d8-475a-aaf1-3da106fed3b0",
+      "name": "DoesNotExistText"
+    },
+    {
+      "parameters": {
+        "content": "## Agente Multicanal \n \n**Por mejorar**:\n\n- Se necesita Configurar los documentos por Whatsapp\n- Se debe configurar AppLevel de ser necesario\n- Hacer pruebas de envío de notas de voz e imagenes por WhatsApp\n- Infraestructura para analizar cuando se debe enviar un audio y cómo limitar los minutos por chat. \n- Modelo Fine Tuning para el Chat Model \n",
+        "height": 244,
+        "width": 560,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -12448,
+        -1216
+      ],
+      "typeVersion": 1,
+      "id": "9ed09c8a-69a3-4db0-8703-058e2b99a4f8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "SplyIQAjgy4DKGAnOrHi",
+          "mode": "list",
+          "cachedResultName": "Clau Bogotá - Natural & Neutral "
+        },
+        "text": "={{ $('IsItAnAudio?').item.json.output }}",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        -6464,
+        -1216
+      ],
+      "id": "8bb1c49b-a791-4b63-9878-96cdc8f0d849",
+      "name": "Convert text to speech",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "E1OfWiBhpFIIz14s",
+          "name": "ElevenLabs Cris account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=audio_respuesta_{{ $now.toMillis() }}.mp3",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://drive.google.com/drive/folders/1tMVzkfOoigmtX_scX20Pqzz9h2p0TtLT",
+          "__regex": "https:\\/\\/drive\\.google\\.com(?:\\/.*|)\\/folders\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "options": {
+          "simplifyOutput": true
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6256,
+        -1216
+      ],
+      "id": "ebf40395-869f-4cbd-bc04-11c1419d0cf6",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kxZweJ9OfkU2m9AD",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6032,
+        -1216
+      ],
+      "id": "3061b3ea-32af-4be1-9fc5-1f0018490a48",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kxZweJ9OfkU2m9AD",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Paso 1: Obtener archivo').first().binary.data.fileName }}.{{ $('Paso 1: Obtener archivo').first().binary.data.fileExtension }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -10656,
+        -752
+      ],
+      "id": "f795999b-5d5f-40f0-89b8-a8bf71040373",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Paso 1: Obtener archivo').first().binary.data.fileName }}.{{ $('Paso 1: Obtener archivo').first().binary.data.fileExtension }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -10464,
+        -752
+      ],
+      "id": "a51738f5-bed9-4ccd-abbf-91b2beeeca37",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook1').item.json.body.customData.message_attachments }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -11120,
+        -448
+      ],
+      "id": "a1a1c5e8-4353-46de-96ac-e3c0159a9cab",
+      "name": "Paso 1: Obtener archivo"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -6080,
+        -736
+      ],
+      "id": "3dc846b6-2339-4869-8c8c-b9aca4591b19",
+      "name": "Wait4",
+      "webhookId": "1152e491-dc2f-447b-beba-dcb4d7600c99"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "20b18d8c-d2a0-4286-a43a-885ba2eb0ce4",
+              "leftValue": "={{ $('Code').item.json.MessagePart2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5856,
+        -624
+      ],
+      "id": "f191fde7-4af4-47bb-9262-28f0cfb8837f",
+      "name": "ExistsPart2?1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_GHL_PRIVATE_INTEGRATION"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{ $('Webhook1').item.json.body.customData.contactID }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $('Corregir Canal de Respuesta').item.json.Canal_Corregido }}"
+            },
+            {
+              "name": "message",
+              "value": "=Entendido!"
+            },
+            {
+              "name": "attachments",
+              "value": "={{ [' https://drive.google.com/uc?export=download&id=' + $('Upload file').first().json.id]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -5840,
+        -1216
+      ],
+      "id": "6f9d949b-a9c2-4271-b4d2-d656be258d6f",
+      "name": "SendAttachmenttoCRM2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e19c67d0-fd23-4404-a5a8-ce0abd7ad91d",
+              "name": "Canal_Corregido",
+              "value": "={{ $json.body['Canal de Respuesta'] === 'WhatsApp API' ? 'WhatsApp' : $json.body['Canal de Respuesta']}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -11632,
+        -944
+      ],
+      "id": "39c58abe-aa09-46ff-a702-c9dd9c7fe4ff",
+      "name": "Corregir Canal de Respuesta"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del Flujo Parte 1: Recepción de Data\n\n1.  En caso de que el mensaje sea recibido desde WhatsApp, el primer nodo `set` renombra el Canal de Respuesta, según lo validado de acuerdo a la documentación de [APIs v2.0 de GHL](https://highlevel.stoplight.io/docs/integrations/0443d7d1a4bd0-standard-response-fields).\n\n2.  Luego de pasar por el `Switch` que evalúa si hay *attachments* o no, llega al **Paso 1**, que es obtener el archivo adjunto, y luego evaluar si se trata de un audio, imagen o documento.\n\n3.  En caso de ser un audio, lo que se hace para que el nodo de '*Transcribe Recording*' acepte el archivo, es añadir el '*File Extension*' en el nombre del archivo. Para ello se carga el archivo en el disco de n8n, lo cual nos permite renombrar el archivo.\n\n4.  Con imágenes no hace falta el proceso anterior.\n\n5.  Todo llega al nodo `MessageConvergence`, que les pone el mismo nombre al *input* de texto recibido (`MensajeAudio`, `MensajeImagen`, o `MensajeTexto`), de forma que el agente de IA haga referencia a un solo nodo.",
+        "height": 416,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -12592,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "44629018-c062-4003-b083-d9eeb1fbc15d",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c104b140-09e9-4e6a-be09-70cf4b0d4c24",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6704,
+        -1200
+      ],
+      "id": "7875b295-a7fa-45b1-914a-a6e6e1a7d433",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del Flujo Parte 2: Generar Respuesta con Agente IA\n\n1. El nodo ´Message Convergence´ envía el texto de lo que ha recibido de la primera parte del WorkFlow, hacia el nodo de Vector Search, que es un paso obligagtorio del proceso RAG. \n**Recordemos que el RAG se utiliza para evitar alucinaciones y limitar el uso de modelos LLM cuyo preentrenamiento maneja información muy general. Esto claro también debe ser mejorado con un modelo aplicado Fine-Tuning**.\n  \n2. El nodo de 'Embeddings OpenAI' se encarga de transformar el texto a un embedding propio de OpenAI, cuya dimensión de 3076 es igua a los embeddings cargados por medio de RAG. \n\n3. El nodo aggregate juntas los embeddings en un Array. \n\n4. El nodo set junta todo en un prompt final, (Pregunta del Usuario y Contexto) que pasa al agente IA. \n\n5. El siguiente nodo set de `Obtener ID del Documento fuente` permite identifiar de qué documento se obtuvio el contexto para generar la respuesta. \n\n6. El agente lo que hace es tomar el Contact_ID de la conversacion para poder guardar la conversación en el Chat Memory Node de Mongo DB. El Chat Model se encarga de tomar todo este historial de chat para construir la respuesta.\n\n7. El chat model es el nodo que puede modifcarse para irse a un modelo más ligero, menos robusto, que esté tuneado para ser un asistente nato, y sea adaptable a cualquier RAG dependiendo de la empresa.\n\n8. El prompt de la personalidad se modifica en el nodo de Agent AI. Este mismo nodo genera el output, que pasa al sistema de envío de respuesta al CRM.     \n\n",
+        "height": 608,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8800,
+        -368
+      ],
+      "typeVersion": 1,
+      "id": "d3c5eaf7-cd4e-4a62-99a0-911d277becce",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee317623-fc40-4f6f-acef-833c56708b3b",
+              "name": "doc_id",
+              "value": "={{ $('MongoDB Vector Search').first().json.document.metadata.doc_id }}",
+              "type": "string"
+            },
+            {
+              "id": "30b48745-91f7-4582-8a36-3b62eb0d1139",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8208,
+        -960
+      ],
+      "id": "319604ad-1823-4dc1-a7f2-f4448e9c4d52",
+      "name": "Obtener ID del documento fuente1"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('MongoDB Vector Search').first().json.document.metadata.doc_id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -4336,
+        -704
+      ],
+      "id": "0a20f3a6-efce-4944-b309-451041779dee",
+      "name": "Compartir Documento Fuente",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kxZweJ9OfkU2m9AD",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_GHL_PRIVATE_INTEGRATION"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{ $('Webhook1').item.json.body.customData.contactID }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $('Corregir Canal de Respuesta').item.json.Canal_Corregido }}"
+            },
+            {
+              "name": "message",
+              "value": "=Te adjunto el archivo que contiene toda la información al respecto: https://docs.google.com/document/d/{{ $('Obtener ID del documento fuente1').item.json.doc_id }}/edit?usp=sharing "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4144,
+        -704
+      ],
+      "id": "0bfab19f-958a-472c-8913-5aceb35ea02d",
+      "name": "EnviarDocumentoAlCRM"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd602436-dfc4-47f1-aa0c-0755dee19979",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4688,
+        -688
+      ],
+      "id": "bde054c9-17d8-47c4-af09-e055a991c89e",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "content": "## Parte 1: Recepción de información\n\nCualquier formato en el que se recepte la información del webhook, va a ser procesado por cualquiera de estas ramas. Ya sea,¿ texto, imagen, audio o documento. ",
+        "height": 1832,
+        "width": 2636,
+        "color": 6
+      },
+      "id": "251c3b93-1a44-4deb-8f58-11dad9ae5456",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -11664,
+        -1248
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Parte 3: Envío de información\n\nLa respuesta puede ser procesada como texto o como audio a través de ElevenLabs. Para ser procesado como mensajes de texto en Whatsapp se puede formatear para que se envíen varios mensajes cortos en lugar de un solo mensaje amplio. En caso de requerirse se puede configurar para enviar un enlace de Google Drive con un documento adjunto.",
+        "height": 1208,
+        "width": 3676,
+        "color": 6
+      },
+      "id": "70c7bd9b-406c-4708-b56a-a23eb9db227f",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7616,
+        -1360
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Parte 1: Recepción del user prompt y proceso en agente IA\n\nUna vez formateado el texto de información del webhook, va a ser convertido en embedding y comparado con los presentes en la base de datos vectorial. Se extraen los embeddings encontrados y se usan como prompt para el Knowledge base agent.",
+        "height": 776,
+        "width": 1212,
+        "color": 6
+      },
+      "id": "654a1eea-5ba4-4479-96e5-2e2357881d1d",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8944,
+        -1248
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del Flujo Parte 3: Envío de respuesta con Go High Level\n\n1. Los nodos `If` presentes redirigen el caso para verificar si es necesario una respuesta en texto o en audio. De momento no hay criterios claros para que una respuesta necesite ser en audio más allá de que sea un audio. Es decir, si la persona envía un audio, se le responde con un audio. Mirar el nodo `IsItAnAudio?`.\n  \n2. En caso de procesar un audio se requiere convertir el texto en audio con el nodo de ElevenLabs. Luego para enviarlo por GHL es preciso subirlo a drive y compartirlo.\n\n3. El nodo de `Code` divide el texto en 3 partes. En otra versión se lo puede mejorar para que se lo parta en las piezas que se requeiran, y luego configurar el loop para que se envíen todas las partes seguidas por WhatsApp. \n\n4. Usamos private API key V2 de GHL para enviar el mensaje al respectivo contacto. Para septiembre de 2026, la documentación pertinente para Go High Level es la siguiente: https://marketplace.gohighlevel.com/docs/Authorization/authorization_doc\n\n",
+        "height": 352,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7424,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "d2b0075f-0815-4d8f-93f9-97b72381ec7c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 Flujo_AgenteMulticanal\n\n**Cliente:** Invers (plantilla / alternativa)\n\n**Objetivo:** Agente multicanal de soporte \"Camila\" (Invers) con RAG, respuesta en texto o audio (ElevenLabs) y envío por GHL.\n\n**Disparador:** Webhook POST llamado desde GHL.\n\n**Integraciones:** GoHighLevel (LeadConnector API v2), MongoDB Atlas, OpenAI, ElevenLabs, Google Drive\n\n**Credenciales a asignar al importar:**\n- ElevenLabs: ElevenLabs Cris account\n- Google Drive OAuth2: Google Drive account\n- MongoDB: MongoDB account ChatMemory, MongoDB account DB AgenteSoporte\n- OpenAI: OpenAi account 2\n\n**Valores a reemplazar (secretos retirados del repo):**\n- `REEMPLAZAR_TOKEN_GHL_PRIVATE_INTEGRATION`\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/plantillas-y-utilidades/agente-multicanal-rag/README.md",
+        "height": 652,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12592,
+        -2132
+      ],
+      "id": "54e593ea-345e-467c-9e98-040dbe2b8ee6",
+      "name": "Doc - Ficha del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Route Types1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze image1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map file extensions1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Corregir Canal de Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image1": {
+      "main": [
+        [
+          {
+            "node": "MensajeImagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from PDF1": {
+      "main": [
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XLS1": {
+      "main": [
+        [
+          {
+            "node": "Map JSON1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XLSX1": {
+      "main": [
+        [
+          {
+            "node": "Map JSON1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map JSON1": {
+      "main": [
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map file extensions1": {
+      "main": [
+        [
+          {
+            "node": "Route Document Types1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Document Types1": {
+      "main": [
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from PDF1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map JSON1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XLS1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XLSX1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "ExistsPart1?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "ExistsPart3?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "MensajeTexto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Paso 1: Obtener archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "MongoDB Vector Search",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Vector Search": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Base Agent": {
+      "main": [
+        [
+          {
+            "node": "ExistsAttachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Prompt Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt Final": {
+      "main": [
+        [
+          {
+            "node": "Obtener ID del documento fuente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "MensajeAudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExistsAttachment": {
+      "main": [
+        [
+          {
+            "node": "DoesNotExistText",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IsItAnAudio?": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExistsPart1?": {
+      "main": [
+        [
+          {
+            "node": "SendPart1toCRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExistsPart3?": {
+      "main": [
+        [
+          {
+            "node": "SendPart3toCRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendPart1toCRM": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendPart2toCRM": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendPart3toCRM": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensajeTexto": {
+      "main": [
+        [
+          {
+            "node": "MessageConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensajeAudio": {
+      "main": [
+        [
+          {
+            "node": "MessageConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensajeImagen": {
+      "main": [
+        [
+          {
+            "node": "MessageConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MessageConvergence": {
+      "main": [
+        [
+          {
+            "node": "MongoDB Vector Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DoesNotExistText": {
+      "main": [
+        [
+          {
+            "node": "IsItAnAudio?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert text to speech": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "SendAttachmenttoCRM2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paso 1: Obtener archivo": {
+      "main": [
+        [
+          {
+            "node": "Route Types1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "ExistsPart2?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExistsPart2?1": {
+      "main": [
+        [
+          {
+            "node": "SendPart2toCRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Corregir Canal de Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Convert text to speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener ID del documento fuente1": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Base Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compartir Documento Fuente": {
+      "main": [
+        [
+          {
+            "node": "EnviarDocumentoAlCRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Compartir Documento Fuente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map document prompt1": {
+      "main": [
+        [
+          {
+            "node": "MessageConvergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d9dabde3-3b88-4408-a6e9-0aeab143c778",
+  "meta": {
+    "templateId": "rag-starter-template",
+    "instanceId": "039fce773344de013634923d5a2bb656abb0045ca113d3fd7a7a61d949da1a5e"
+  },
+  "nodeGroups": [],
+  "id": "7Ogl6aPnoFxjNVm3",
+  "tags": [
+    {
+      "updatedAt": "2025-08-06T02:32:52.253Z",
+      "createdAt": "2025-08-06T02:32:52.253Z",
+      "id": "1uUrTLTlvOhEzil3",
+      "name": "Alternativas"
+    }
+  ]
+}

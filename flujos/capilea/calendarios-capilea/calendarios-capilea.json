@@ -1,0 +1,3449 @@
+{
+  "name": "Calendarios Capilea",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -11056,
+        -2208
+      ],
+      "id": "843534a3-12c9-4727-ad23-5b41003cb274",
+      "name": "Get Free Slots CRM Capilea"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e707321-3a88-46d2-91fe-3f6fc4c8051c",
+              "leftValue": "={{ $json.disponible }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "99b8b7e8-c854-4cd4-8feb-6208154a9db6",
+              "leftValue": "={{ $('Webhook Meso').item.json.body.calendar.appoinmentStatus }}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "425ae0cd-ba46-4a34-86df-c14a7e616865",
+              "leftValue": "={{ $('Webhook Meso').item.json.body.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d20c8e0e-9c24-4dbd-9def-1426e7bcb6e2",
+              "leftValue": "={{ $('Webhook Meso').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10608,
+        -2208
+      ],
+      "id": "69f9fda4-67f4-4b5c-95b0-9def2a0d11e5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el startTime del JSON de entrada\nconst startTimeStr = items[0].json.body.calendar.startTime;\n\n// Creamos un objeto Date a partir del startTime\nconst fechaDesdeObj = new Date(startTimeStr);\n\n// Función para formatear fecha a DD/MM/YYYY\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses van de 0-11\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\n\n// Calculamos fechaDesde\nconst fechaDesde = formatFecha(fechaDesdeObj);\n\n// Calculamos fechaHasta (sumando 1 día)\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\n\n// Construimos la URL final\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst params = `?api=getAgendaTurnosLibres&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&tipoAgenda=OTRO&idSucursal=1&duracionTurno=15&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`;\n\n// Retornamos los datos procesados\nreturn [{\n  json: {\n    fechaDesde,\n    fechaHasta,\n    urlFinal: baseUrl + params\n  }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11328,
+        -2208
+      ],
+      "id": "f859cd6f-ab07-48b1-986f-d268bef126fd",
+      "name": "Construir URL Free Slots Skyia"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -10800,
+        -1360
+      ],
+      "id": "43361e79-69a0-449a-888c-20d065d9227e",
+      "name": "Get Free Slots CRM Capilea2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e707321-3a88-46d2-91fe-3f6fc4c8051c",
+              "leftValue": "={{ $json.disponible }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "529fdc0d-154b-40d5-b065-ed723154ab77",
+              "leftValue": "={{ $('Webhook Dermo').item.json.body.calendar.appoinmentStatus }}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "8622112f-7531-4115-8550-c8e984aea968",
+              "leftValue": "={{ $('Webhook Dermo').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "bd9da905-092f-45b4-8c90-db94e09c9338",
+              "leftValue": "={{ $('Webhook Dermo').item.json.body.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10352,
+        -1360
+      ],
+      "id": "9ad565d0-c02b-4fab-868d-fbf0b29a494b",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el startTime del JSON de entrada\nconst startTimeStr = items[0].json.body.calendar.startTime;\n\n// Creamos un objeto Date a partir del startTime\nconst fechaDesdeObj = new Date(startTimeStr);\n\n// Función para formatear fecha a DD/MM/YYYY\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses van de 0-11\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\n\n// Calculamos fechaDesde\nfechaDesdeObj.setDate(fechaDesdeObj.getDate());\nconst fechaDesde = formatFecha(fechaDesdeObj);\n\n// Calculamos fechaHasta (sumando 1 día)\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\n\n// Construimos la URL final\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst params = `?api=getAgendaTurnosLibres&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&tipoAgenda=OTRO&idSucursal=1&duracionTurno=15&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`;\n\n// Retornamos los datos procesados\nreturn [{\n  json: {\n    fechaDesde,\n    fechaHasta,\n    urlFinal: baseUrl + params\n  }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11072,
+        -1360
+      ],
+      "id": "c0829bc2-86f4-4e7b-bc7c-ff2f4ade45bb",
+      "name": "Construir URL Free Slots Skyia1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -10784,
+        -592
+      ],
+      "id": "e6d68759-556d-4d77-af7a-2fdfb8bb5deb",
+      "name": "Get Free Slots CRM Capilea4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e707321-3a88-46d2-91fe-3f6fc4c8051c",
+              "leftValue": "={{ $json.disponible }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b69190f0-8d65-4b88-96af-877d63c9647c",
+              "leftValue": "={{ $('Webhook Revi').item.json.body.calendar.appoinmentStatus }}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "f3f4256b-adee-4a0a-832e-b19c8bd4e7ce",
+              "leftValue": "={{ $('Webhook Revi').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5f0dc2c7-2557-416c-a3df-30c60f307914",
+              "leftValue": "={{ $('Webhook Revi').item.json.body.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10336,
+        -592
+      ],
+      "id": "f10dad84-7622-4963-9217-85ed868a0b90",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el startTime del JSON de entrada\nconst startTimeStr = items[0].json.body.calendar.startTime;\n\n// Creamos un objeto Date a partir del startTime\nconst fechaDesdeObj = new Date(startTimeStr);\n\n// Funcion para formatear fecha a DD/MM/YYYY\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\n\nconst fechaDesde = formatFecha(fechaDesdeObj);\n\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\n\n// Normalizado al mismo endpoint/formato que usan las demas ramas\n// (antes usaba un endpoint /turnoslibres distinto y un Bearer distinto)\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst params = `?api=getAgendaTurnosLibres&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&tipoAgenda=OTRO&idSucursal=1&duracionTurno=15&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`;\n\nreturn [{\n  json: {\n    fechaDesde,\n    fechaHasta,\n    urlFinal: baseUrl + params\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11056,
+        -592
+      ],
+      "id": "02d05008-1f09-4096-8a38-6405e10bd94c",
+      "name": "Construir URL Free Slots Skyia2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "CapileaCRMdermopigmentacion",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -11632,
+        -1360
+      ],
+      "id": "810479c5-c7f9-4be2-8962-fa1da1a3e976",
+      "name": "Webhook Dermo",
+      "webhookId": "52add710-de96-453a-bc79-56646c836515"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "CapileaCRMrevisiones",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -11584,
+        -592
+      ],
+      "id": "b2a7e13a-867c-49c2-ac26-82317ea5a7d4",
+      "name": "Webhook Revi",
+      "webhookId": "52add710-de96-453a-bc79-56646c836515"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalInput = $(\"Webhook Meso\").first().json; \nconst startTimeStr = originalInput.startTime || (originalInput.body && originalInput.body.calendar ? originalInput.body.calendar.startTime : null); \nconst motivoConsulta = originalInput.especialidad_dropdown || (originalInput.body ? originalInput.body.especialidad_dropdown : originalInput.title); \nif (!startTimeStr) { throw new Error(\"No se pudo encontrar 'startTime' en el input de GHL.\"); }\n\n// idRecurso FIJO (Mesoterapia) -- SIN CONFIRMAR contra el catalogo real\n// de Skyia de Belgrano (getAgendaRecursos). Es el valor que ya estaba\n// \"intencionado\" en el mapping de texto viejo, ahora fijo en vez de\n// depender de un match de texto con default invalido (\"44\"). Esta rama\n// solo la dispara \"Webhook Meso\", asi que el recurso ya es conocido.\nconst targetIdProfesional = 10;\n\nconst [targetDate, targetFullTime] = startTimeStr.split('T');\nconst [tH, tM] = targetFullTime.substring(0, 5).split(':');\nconst targetTimePadded = `${tH.padStart(2, '0')}:${tM}`;\nlet existeTurno = false;\nfor (const item of items) {\n  const slot = item.json;\n  let slotHoraPadded = \"\";\n  if (slot.horaInicio) slotHoraPadded = slot.horaInicio.substring(0, 5);\n  if (Number(slot.idEntidad) === targetIdProfesional && slotHoraPadded === targetTimePadded) {\n    if (slot.fecha === targetDate) { existeTurno = true; break; }\n  }\n}\nreturn [{ json: { startTimeValidado: startTimeStr, producto: motivoConsulta, categoriaNecesaria: targetIdProfesional, disponible: existeTurno } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -10816,
+        -2208
+      ],
+      "id": "3b8cf9be-1a0c-482d-b66c-e237e2cdea2f",
+      "name": "Check Disponibilidad Skyia0"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalInput = $(\"Webhook Revi\").first().json; \nconst startTimeStr = originalInput.startTime || (originalInput.body && originalInput.body.calendar ? originalInput.body.calendar.startTime : null); \nconst motivoConsulta = originalInput.especialidad_dropdown || (originalInput.body ? originalInput.body.especialidad_dropdown : originalInput.title); \nif (!startTimeStr) { throw new Error(\"No se pudo encontrar 'startTime' en el input de GHL.\"); }\n\n// idRecurso FIJO (Revisaciones) -- SIN CONFIRMAR contra el catalogo real\n// de Skyia de Belgrano (getAgendaRecursos). Es el valor que ya estaba\n// \"intencionado\" en el mapping de texto viejo, ahora fijo en vez de\n// depender de un match de texto con default invalido (\"44\"). Esta rama\n// solo la dispara \"Webhook Revi\", asi que el recurso ya es conocido.\nconst targetIdProfesional = 5;\n\nconst [targetDate, targetFullTime] = startTimeStr.split('T');\nconst [tH, tM] = targetFullTime.substring(0, 5).split(':');\nconst targetTimePadded = `${tH.padStart(2, '0')}:${tM}`;\nlet existeTurno = false;\nfor (const item of items) {\n  const slot = item.json;\n  let slotHoraPadded = \"\";\n  if (slot.horaInicio) slotHoraPadded = slot.horaInicio.substring(0, 5);\n  if (Number(slot.idEntidad) === targetIdProfesional && slotHoraPadded === targetTimePadded) {\n    if (slot.fecha === targetDate) { existeTurno = true; break; }\n  }\n}\nreturn [{ json: { startTimeValidado: startTimeStr, producto: motivoConsulta, categoriaNecesaria: targetIdProfesional, disponible: existeTurno } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -10544,
+        -592
+      ],
+      "id": "c89e587f-938e-41cb-ac41-f00f67a552b9",
+      "name": "Check Disponibilidad Skyia3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalInput = $(\"Webhook Dermo\").first().json; \nconst startTimeStr = originalInput.startTime || (originalInput.body && originalInput.body.calendar ? originalInput.body.calendar.startTime : null); \nconst motivoConsulta = originalInput.especialidad_dropdown || (originalInput.body ? originalInput.body.especialidad_dropdown : originalInput.title); \nif (!startTimeStr) { throw new Error(\"No se pudo encontrar 'startTime' en el input de GHL.\"); }\n\n// idRecurso FIJO (Dermopigmentación) -- SIN CONFIRMAR contra el catalogo real\n// de Skyia de Belgrano (getAgendaRecursos). Es el valor que ya estaba\n// \"intencionado\" en el mapping de texto viejo, ahora fijo en vez de\n// depender de un match de texto con default invalido (\"44\"). Esta rama\n// solo la dispara \"Webhook Dermo\", asi que el recurso ya es conocido.\nconst targetIdProfesional = 13;\n\nconst [targetDate, targetFullTime] = startTimeStr.split('T');\nconst [tH, tM] = targetFullTime.substring(0, 5).split(':');\nconst targetTimePadded = `${tH.padStart(2, '0')}:${tM}`;\nlet existeTurno = false;\nfor (const item of items) {\n  const slot = item.json;\n  let slotHoraPadded = \"\";\n  if (slot.horaInicio) slotHoraPadded = slot.horaInicio.substring(0, 5);\n  if (Number(slot.idEntidad) === targetIdProfesional && slotHoraPadded === targetTimePadded) {\n    if (slot.fecha === targetDate) { existeTurno = true; break; }\n  }\n}\nreturn [{ json: { startTimeValidado: startTimeStr, producto: motivoConsulta, categoriaNecesaria: targetIdProfesional, disponible: existeTurno } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -10560,
+        -1360
+      ],
+      "id": "30d356eb-a3e5-407d-8136-9a5bc0e4593d",
+      "name": "Check Disponibilidad Skyia1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e707321-3a88-46d2-91fe-3f6fc4c8051c",
+              "leftValue": "={{ $json.disponible }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ae1756f1-bcb5-44fe-8179-492c180ea1f8",
+              "leftValue": "={{ $('Webhook PRP').item.json.body.calendar.appoinmentStatus }}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "8c51d423-8301-4e0f-90d6-3abb62106b61",
+              "leftValue": "={{ $('Webhook PRP').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "0fe7e286-cce4-4f04-88d7-3105eb8da7c8",
+              "leftValue": "={{ $('Webhook PRP').item.json.body.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10368,
+        288
+      ],
+      "id": "1dc42228-01fc-478d-a608-e853a17e2d56",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e707321-3a88-46d2-91fe-3f6fc4c8051c",
+              "leftValue": "={{ $json.disponible }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5ada1de7-01f0-4ff9-a072-18213d510084",
+              "leftValue": "={{ $('Webhook Control').item.json.body.calendar.appoinmentStatus }}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "50299c5b-f47a-4fe3-bb58-950784c85105",
+              "leftValue": "={{ $('Webhook Control').item.json.body.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10448,
+        1264
+      ],
+      "id": "e56b794c-6f62-4d58-a1dc-154c4b33a47b",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "MesoCapileaCRM",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -11856,
+        -2208
+      ],
+      "id": "1aa77f3a-7643-4a8c-ac29-812b8da86f58",
+      "name": "Webhook Meso",
+      "webhookId": "52add710-de96-453a-bc79-56646c836515"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "PRPCapileaCRM",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -11600,
+        272
+      ],
+      "id": "d97dfe5f-3d7c-48aa-bbf5-eb06f1b2e16d",
+      "name": "Webhook PRP",
+      "webhookId": "52add710-de96-453a-bc79-56646c836515"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ControlCapileaCRM",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -11648,
+        1264
+      ],
+      "id": "39a2931f-3907-4b0f-b476-cce0786d36fe",
+      "name": "Webhook Control",
+      "webhookId": "52add710-de96-453a-bc79-56646c836515"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "HTTP 200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -11424,
+        -1360
+      ],
+      "id": "236f8b78-0da1-42b9-9026-fb40bc8f7849",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "HTTP 200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -11328,
+        -592
+      ],
+      "id": "1971fa56-94a0-4d89-90b1-31f215aeccbb",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "HTTP 200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -11344,
+        272
+      ],
+      "id": "4fc0f2ff-a273-4eb1-9e34-444e23d34ffe",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "HTTP 200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -11600,
+        -2208
+      ],
+      "id": "53394bec-8396-4c01-b25b-b892aa47b757",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "HTTP 200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -11392,
+        1264
+      ],
+      "id": "0a40a0ea-78ba-4098-b233-014d244205b4",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Control\").first().json.body;\nconst nombre = data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = data.phone || 'Sin telefono';\nconst producto = data.especialidad_dropdown || data.title || '';\nconst startTime = (data.calendar && data.calendar.startTime) ? data.calendar.startTime : '';\nconst mensaje = `⚠️ *Control - Reserva sin DNI*\\nNo se pudo crear el paciente en Skyia: no llego el DNI.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nProducto: ${producto}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9568,
+        992
+      ],
+      "id": "9830576e-2cb0-4174-8a54-c64d00a4a6be",
+      "name": "Msg Sin DNI Meso"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Control\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Control - Producto no reconocido*\\nNo se reconocio el producto/especialidad \"${producto}\" — revisar el mapping.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9536,
+        1232
+      ],
+      "id": "83776b3d-eb4d-40ff-af0a-28a61a94c628",
+      "name": "Msg Producto No Reconocido Meso"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Control\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Control - Sin disponibilidad*\\nNo hay turno libre para \"${producto}\" en la fecha/hora solicitada.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9536,
+        1456
+      ],
+      "id": "76931b5a-844b-4992-b7fc-c2ddb15ce7d8",
+      "name": "Msg Sin Disponibilidad Meso"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: \"WhatsApp\", contactId: \"hAwdN7laeOOk4I9xlT6y\", message: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9088,
+        1232
+      ],
+      "id": "51b034a8-f773-4106-80c6-03de848c07bc",
+      "name": "Enviar WhatsApp Meso",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SoStbL0Wd315yDj6",
+          "name": "Auth RAMOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "={{ $json.urlReserva }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idAgenda\":\"{{ $json.datosMapeados.idAgenda }}\",\n  \"idRecurso\":\"{{ $json.datosMapeados.idRecurso }}\",\n  \"idPaciente\":\"{{ $json.datosMapeados.idPaciente }}\",\n  \"fecha\": \"{{ $json.datosMapeados.fecha }}\",\n  \"horaInicio\":\"{{ $json.datosMapeados.horaInicio }}\",\n  \"horaFin\":\"{{ $json.datosMapeados.horaFin }}\",\n  \"idProducto\": \"{{ $json.datosMapeados.idProducto }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -7824,
+        1264
+      ],
+      "id": "74cd2bd5-d7a9-4815-a7f9-12a69e34b5ee",
+      "name": "Post CRM Capilea11",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Control\").first().json.body;\nconst cal = data.calendar;\nconst motivoConsulta = $('Tiene DNI').first().json.producto;\n\n// idRecurso FIJO = 3 (Control Médico / Control PO) -- SIN CONFIRMAR contra\n// Belgrano, ver nota mas arriba. Antes: mapping de texto + default \"44\"\n// (recurso invalido) si no matcheaba exacto -- eso generaba turnos\n// \"huerfanos\" en Skyia invisibles para Vigilancia. Esta rama solo la\n// dispara \"Webhook Control\", asi que el recurso ya es conocido de antemano.\nconst idProfesional = \"3\";\n\n// idProducto: afina por texto dentro de ESTA especialidad; si no matchea\n// nada cae a un idProducto valido de la misma especialidad (nunca a un\n// default invalido ni cruzado con otra especialidad).\nconst productoMapping = {};\nlet idProducto = 33;\nif (motivoConsulta) {\n  const motivoUpper = motivoConsulta.toUpperCase();\n  for (const [keyword, id] of Object.entries(productoMapping)) {\n    if (motivoUpper.includes(keyword)) { idProducto = id; break; }\n  }\n}\n\nconst [fechaPart, horaInicioFull] = cal.startTime.split('T');\nconst [year, month, day] = fechaPart.split('-');\nconst fechaFormateada = `${day}/${month}/${year}`;\nconst horaInicio = horaInicioFull.substring(0, 5);\nconst horaFin = cal.endTime.split('T')[1].substring(0, 5);\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postAgendaEvento\",\n  idAgenda: parseInt(\"2\"),\n  idRecurso: idProfesional,\n  idPaciente: $input.first().json.idPaciente,\n  idProducto: idProducto,\n  fecha: fechaFormateada,\n  horaInicio: horaInicio,\n  horaFin: horaFin,\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  if (params[key] !== \"\" && params[key] !== null) {\n    queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n  }\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\nreturn [{ \n  json: { \n    urlReserva: urlFinal, \n    idAsignado: idProfesional, \n    idProducto: idProducto, \n    productoDetectado: motivoConsulta, \n    datosMapeados: params \n  } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8112,
+        1264
+      ],
+      "id": "c72505a1-509e-416d-8310-bb4536dc8468",
+      "name": "Code in JavaScript13"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Control\").first().json.body;\n\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\n// Solo se agregan los campos que realmente existan (todos son opcionales)\nconst bodyPaciente = {};\n\nif (data[\"NUMERO DE IDENTIDAD (DNI)\"]) {\n  bodyPaciente.tipoDocumento = \"DNI\";\n  bodyPaciente.documento = data[\"NUMERO DE IDENTIDAD (DNI)\"];\n}\nif (data.phone) bodyPaciente.telefono = data.phone;\n\nif (data.full_name) {\n  bodyPaciente.nombre = data.full_name;\n} else if (data.first_name || data.last_name) {\n  bodyPaciente.nombre = `${data.last_name || ''} ${data.first_name || ''}`.trim();\n}\n\nif (data.email) bodyPaciente.email = data.email;\nif (data.fecha_nacimiento) bodyPaciente.fechaNacimiento = data.fecha_nacimiento; // formato DD/MM/YYYY\nif (data.sexo) bodyPaciente.sexo = data.sexo.toUpperCase(); // MASCULINO / FEMENINO\n\nreturn [{ json: { urlFinal, bodyPaciente } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8320,
+        896
+      ],
+      "id": "d3627151-64d4-4da8-a01b-469a79aca879",
+      "name": "Construir Body Post Paciente Meso2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.bodyPaciente) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -7920,
+        928
+      ],
+      "id": "5d489fe2-7122-443a-80d7-d50c1950ca5b",
+      "name": "Post Paciente Skyia Meso2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -10912,
+        1264
+      ],
+      "id": "1fe02bd7-1883-4c27-bba3-91387810c88c",
+      "name": "Get Free Slots CRM Capilea1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalInput = $(\"Webhook Control\").first().json; \nconst startTimeStr = originalInput.startTime || (originalInput.body && originalInput.body.calendar ? originalInput.body.calendar.startTime : null); \nconst motivoConsulta = originalInput.especialidad_dropdown || (originalInput.body ? originalInput.body.especialidad_dropdown : originalInput.title); \nif (!startTimeStr) { throw new Error(\"No se pudo encontrar 'startTime' en el input de GHL.\"); }\n\n// idRecurso FIJO (Control Médico / Control PO) -- SIN CONFIRMAR contra el catalogo real\n// de Skyia de Belgrano (getAgendaRecursos). Es el valor que ya estaba\n// \"intencionado\" en el mapping de texto viejo, ahora fijo en vez de\n// depender de un match de texto con default invalido (\"44\"). Esta rama\n// solo la dispara \"Webhook Control\", asi que el recurso ya es conocido.\nconst targetIdProfesional = 3;\n\nconst [targetDate, targetFullTime] = startTimeStr.split('T');\nconst [tH, tM] = targetFullTime.substring(0, 5).split(':');\nconst targetTimePadded = `${tH.padStart(2, '0')}:${tM}`;\nlet existeTurno = false;\nfor (const item of items) {\n  const slot = item.json;\n  let slotHoraPadded = \"\";\n  if (slot.horaInicio) slotHoraPadded = slot.horaInicio.substring(0, 5);\n  if (Number(slot.idEntidad) === targetIdProfesional && slotHoraPadded === targetTimePadded) {\n    if (slot.fecha === targetDate) { existeTurno = true; break; }\n  }\n}\nreturn [{ json: { startTimeValidado: startTimeStr, producto: motivoConsulta, categoriaNecesaria: targetIdProfesional, disponible: existeTurno } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -10672,
+        1264
+      ],
+      "id": "11f9ae05-b100-483f-a4d6-0ba635bb6fac",
+      "name": "Check Disponibilidad Skyia4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el startTime del JSON de entrada\nconst startTimeStr = items[0].json.body.calendar.startTime;\n\n// Creamos un objeto Date a partir del startTime\nconst fechaDesdeObj = new Date(startTimeStr);\n\n// Función para formatear fecha a DD/MM/YYYY\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses van de 0-11\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\n\n// Calculamos fechaDesde\nfechaDesdeObj.setDate(fechaDesdeObj.getDate());\nconst fechaDesde = formatFecha(fechaDesdeObj);\n\n// Calculamos fechaHasta (sumando 1 día)\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\n\n// Construimos la URL final\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst params = `?api=getAgendaTurnosLibres&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&tipoAgenda=OTRO&idSucursal=1&duracionTurno=15&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`;\n\n// Retornamos los datos procesados\nreturn [{\n  json: {\n    fechaDesde,\n    fechaHasta,\n    urlFinal: baseUrl + params\n  }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11152,
+        1264
+      ],
+      "id": "ccc8325c-45f7-4b1a-a9bf-d41c0b5cacaa",
+      "name": "Construir URL Free Slots Skyia3"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9024,
+        912
+      ],
+      "id": "3740fe48-83ef-4247-8415-8b7cc4744f99",
+      "name": "Get Paciente Capilea",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const startTimeStr = $('Webhook Control').first().json.body.calendar.startTime;\nconst fechaDesdeObj = new Date(startTimeStr);\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\nconst fechaDesde = formatFecha(fechaDesdeObj);\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\nconst params = {\n  numeroDocumento: $('Webhook Control').first().json.body[\"NUMERO DE IDENTIDAD (DNI)\"],\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"getPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\nreturn [{ json: { fechaDesde, fechaHasta, urlFinal: urlFinal } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9280,
+        912
+      ],
+      "id": "bb1640c4-41ef-4450-b49b-d8fb68725bea",
+      "name": "Construir URL Get Paciente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f99cd462-651b-4c30-90db-51586633e79b",
+              "leftValue": "={{ $('Webhook Control').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9824,
+        928
+      ],
+      "id": "c8db700a-1e86-4902-bb84-e95b5bede996",
+      "name": "Tiene DNI"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7154ba10-14cf-4091-8cbc-b72d97162d7f",
+              "leftValue": "={{ $json.categoriaNecesaria == null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9856,
+        1312
+      ],
+      "id": "3033c836-2011-4082-9125-81c9330ac32a",
+      "name": "Motivo Sin Reserva"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40c8a619-cb6d-4f56-b9b3-a3b386512d7b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8704,
+        976
+      ],
+      "id": "e535fd35-1ea8-4c5f-80d3-8edccd10d1fb",
+      "name": "Existe Paciente"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook PRP\").first().json.body;\nconst nombre = data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = data.phone || 'Sin telefono';\nconst producto = data.especialidad_dropdown || data.title || '';\nconst startTime = (data.calendar && data.calendar.startTime) ? data.calendar.startTime : '';\nconst mensaje = `⚠️ *Mesoterapia - Reserva sin DNI*\\nNo se pudo crear el paciente en Skyia: no llego el DNI.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nProducto: ${producto}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9584,
+        272
+      ],
+      "id": "145fce42-d42b-4759-aefd-2fc08b6e9cbb",
+      "name": "Msg Sin DNI Meso2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook PRP\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Producto no reconocido*\\nNo se reconocio el producto/especialidad \"${producto}\" — revisar el mapping.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9552,
+        512
+      ],
+      "id": "552ec803-e00d-4cf4-87fc-2255f79ba6cf",
+      "name": "Msg Producto No Reconocido Meso2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook PRP\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Sin disponibilidad*\\nNo hay turno libre para \"${producto}\" en la fecha/hora solicitada.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9552,
+        704
+      ],
+      "id": "f1f58f6e-2cda-4841-acf9-8215b00f7d7e",
+      "name": "Msg Sin Disponibilidad Meso2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: \"WhatsApp\", contactId: \"hAwdN7laeOOk4I9xlT6y\", message: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9104,
+        512
+      ],
+      "id": "b2e3c1bb-7797-4f7e-9c5d-89b70a9ad724",
+      "name": "Enviar WhatsApp Meso2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SoStbL0Wd315yDj6",
+          "name": "Auth RAMOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "={{ $json.urlReserva }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idAgenda\":\"{{ $json.datosMapeados.idAgenda }}\",\n  \"idRecurso\":\"{{ $json.datosMapeados.idRecurso }}\",\n  \"idPaciente\":\"{{ $json.datosMapeados.idPaciente }}\",\n  \"fecha\": \"{{ $json.datosMapeados.fecha }}\",\n  \"horaInicio\":\"{{ $json.datosMapeados.horaInicio }}\",\n  \"horaFin\":\"{{ $json.datosMapeados.horaFin }}\",\n  \"idProducto\": \"{{ $json.datosMapeados.idProducto }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -7840,
+        544
+      ],
+      "id": "2091322c-9683-4c7f-975b-3feb5a5aac22",
+      "name": "Post CRM Capilea12",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook PRP\").first().json.body;\nconst cal = data.calendar;\nconst motivoConsulta = $('Tiene DNI1').first().json.producto;\n\n// idRecurso FIJO = 7 (PRP) -- SIN CONFIRMAR contra\n// Belgrano, ver nota mas arriba. Antes: mapping de texto + default \"44\"\n// (recurso invalido) si no matcheaba exacto -- eso generaba turnos\n// \"huerfanos\" en Skyia invisibles para Vigilancia. Esta rama solo la\n// dispara \"Webhook PRP\", asi que el recurso ya es conocido de antemano.\nconst idProfesional = \"7\";\n\n// idProducto: afina por texto dentro de ESTA especialidad; si no matchea\n// nada cae a un idProducto valido de la misma especialidad (nunca a un\n// default invalido ni cruzado con otra especialidad).\nconst productoMapping = { \"PRP 1\": 16 };\nlet idProducto = 6;\nif (motivoConsulta) {\n  const motivoUpper = motivoConsulta.toUpperCase();\n  for (const [keyword, id] of Object.entries(productoMapping)) {\n    if (motivoUpper.includes(keyword)) { idProducto = id; break; }\n  }\n}\n\nconst [fechaPart, horaInicioFull] = cal.startTime.split('T');\nconst [year, month, day] = fechaPart.split('-');\nconst fechaFormateada = `${day}/${month}/${year}`;\nconst horaInicio = horaInicioFull.substring(0, 5);\nconst horaFin = cal.endTime.split('T')[1].substring(0, 5);\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postAgendaEvento\",\n  idAgenda: parseInt(\"2\"),\n  idRecurso: idProfesional,\n  idPaciente: $input.first().json.idPaciente,\n  idProducto: idProducto,\n  fecha: fechaFormateada,\n  horaInicio: horaInicio,\n  horaFin: horaFin,\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  if (params[key] !== \"\" && params[key] !== null) {\n    queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n  }\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\nreturn [{ \n  json: { \n    urlReserva: urlFinal, \n    idAsignado: idProfesional, \n    idProducto: idProducto, \n    productoDetectado: motivoConsulta, \n    datosMapeados: params \n  } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8128,
+        544
+      ],
+      "id": "6de61123-fe9d-4281-86f3-cfec4380b84a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook PRP\").first().json.body;\n\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\n// Solo se agregan los campos que realmente existan (todos son opcionales)\nconst bodyPaciente = {};\n\nif (data[\"NUMERO DE IDENTIDAD (DNI)\"]) {\n  bodyPaciente.tipoDocumento = \"DNI\";\n  bodyPaciente.documento = data[\"NUMERO DE IDENTIDAD (DNI)\"];\n}\nif (data.phone) bodyPaciente.telefono = data.phone;\n\nif (data.full_name) {\n  bodyPaciente.nombre = data.full_name;\n} else if (data.first_name || data.last_name) {\n  bodyPaciente.nombre = `${data.last_name || ''} ${data.first_name || ''}`.trim();\n}\n\nif (data.email) bodyPaciente.email = data.email;\nif (data.fecha_nacimiento) bodyPaciente.fechaNacimiento = data.fecha_nacimiento; // formato DD/MM/YYYY\nif (data.sexo) bodyPaciente.sexo = data.sexo.toUpperCase(); // MASCULINO / FEMENINO\n\nreturn [{ json: { urlFinal, bodyPaciente } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8336,
+        176
+      ],
+      "id": "178d614e-4e4e-4183-8ec3-80946e922266",
+      "name": "Construir Body Post Paciente Meso3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.bodyPaciente) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -7936,
+        208
+      ],
+      "id": "c924e9bc-715b-4fdc-b77e-998a754a622c",
+      "name": "Post Paciente Skyia Meso3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9040,
+        192
+      ],
+      "id": "e29f5625-6396-48c4-8f5e-176bd9f5a897",
+      "name": "Get Paciente Capilea1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const startTimeStr = $('Webhook PRP').first().json.body.calendar.startTime;\nconst fechaDesdeObj = new Date(startTimeStr);\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\nconst fechaDesde = formatFecha(fechaDesdeObj);\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\nconst params = {\n  numeroDocumento: $('Webhook PRP').first().json.body[\"NUMERO DE IDENTIDAD (DNI)\"],\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"getPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\nreturn [{ json: { fechaDesde, fechaHasta, urlFinal: urlFinal } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9296,
+        192
+      ],
+      "id": "04d07ee2-2675-471e-90db-e139a29da76c",
+      "name": "Construir URL Get Paciente1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f99cd462-651b-4c30-90db-51586633e79b",
+              "leftValue": "={{ $('Webhook PRP').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9840,
+        208
+      ],
+      "id": "8488f760-1a7b-45d9-b797-11deb79c80c4",
+      "name": "Tiene DNI1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7154ba10-14cf-4091-8cbc-b72d97162d7f",
+              "leftValue": "={{ $json.categoriaNecesaria == null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9872,
+        592
+      ],
+      "id": "c6696913-b8d3-42a6-b4a2-59067dff468d",
+      "name": "Motivo Sin Reserva1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40c8a619-cb6d-4f56-b9b3-a3b386512d7b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8720,
+        256
+      ],
+      "id": "ecce6ba0-fc89-4dbb-91c4-1537933c2897",
+      "name": "Existe Paciente1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Revi\").first().json.body;\nconst nombre = data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = data.phone || 'Sin telefono';\nconst producto = data.especialidad_dropdown || data.title || '';\nconst startTime = (data.calendar && data.calendar.startTime) ? data.calendar.startTime : '';\nconst mensaje = `⚠️ *Mesoterapia - Reserva sin DNI*\\nNo se pudo crear el paciente en Skyia: no llego el DNI.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nProducto: ${producto}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9616,
+        -656
+      ],
+      "id": "cef9239d-eace-4bf4-8be6-274519271684",
+      "name": "Msg Sin DNI Meso3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Revi\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Producto no reconocido*\\nNo se reconocio el producto/especialidad \"${producto}\" — revisar el mapping.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9584,
+        -416
+      ],
+      "id": "9740820e-d57a-4c43-9698-97a2e7467a02",
+      "name": "Msg Producto No Reconocido Meso3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Revi\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Sin disponibilidad*\\nNo hay turno libre para \"${producto}\" en la fecha/hora solicitada.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9584,
+        -192
+      ],
+      "id": "f55393cc-2760-43de-be3c-b2bbdbb7a685",
+      "name": "Msg Sin Disponibilidad Meso3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: \"WhatsApp\", contactId: \"hAwdN7laeOOk4I9xlT6y\", message: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9136,
+        -416
+      ],
+      "id": "3344a8b4-ca2c-44e0-be9e-9ebbb87d8025",
+      "name": "Enviar WhatsApp Meso3",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SoStbL0Wd315yDj6",
+          "name": "Auth RAMOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "={{ $json.urlReserva }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idAgenda\":\"{{ $json.datosMapeados.idAgenda }}\",\n  \"idRecurso\":\"{{ $json.datosMapeados.idRecurso }}\",\n  \"idPaciente\":\"{{ $json.datosMapeados.idPaciente }}\",\n  \"fecha\": \"{{ $json.datosMapeados.fecha }}\",\n  \"horaInicio\":\"{{ $json.datosMapeados.horaInicio }}\",\n  \"horaFin\":\"{{ $json.datosMapeados.horaFin }}\",\n  \"idProducto\": \"{{ $json.datosMapeados.idProducto }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -7872,
+        -384
+      ],
+      "id": "778de271-e89b-4e22-b62d-688fba29ecb9",
+      "name": "Post CRM Capilea13",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Revi\").first().json.body;\nconst cal = data.calendar;\nconst motivoConsulta = $('Tiene DNI2').first().json.producto;\n\n// idRecurso FIJO = 5 (Revisaciones) -- SIN CONFIRMAR contra\n// Belgrano, ver nota mas arriba. Antes: mapping de texto + default \"44\"\n// (recurso invalido) si no matcheaba exacto -- eso generaba turnos\n// \"huerfanos\" en Skyia invisibles para Vigilancia. Esta rama solo la\n// dispara \"Webhook Revi\", asi que el recurso ya es conocido de antemano.\nconst idProfesional = \"5\";\n\n// idProducto: afina por texto dentro de ESTA especialidad; si no matchea\n// nada cae a un idProducto valido de la misma especialidad (nunca a un\n// default invalido ni cruzado con otra especialidad).\nconst productoMapping = { \"REVISACION 2\": 30, \"REVI 2° MTC\": 47, \"REVI 2 MTC\": 47 };\nlet idProducto = 29;\nif (motivoConsulta) {\n  const motivoUpper = motivoConsulta.toUpperCase();\n  for (const [keyword, id] of Object.entries(productoMapping)) {\n    if (motivoUpper.includes(keyword)) { idProducto = id; break; }\n  }\n}\n\nconst [fechaPart, horaInicioFull] = cal.startTime.split('T');\nconst [year, month, day] = fechaPart.split('-');\nconst fechaFormateada = `${day}/${month}/${year}`;\nconst horaInicio = horaInicioFull.substring(0, 5);\nconst horaFin = cal.endTime.split('T')[1].substring(0, 5);\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postAgendaEvento\",\n  idAgenda: parseInt(\"2\"),\n  idRecurso: idProfesional,\n  idPaciente: $input.first().json.idPaciente,\n  idProducto: idProducto,\n  fecha: fechaFormateada,\n  horaInicio: horaInicio,\n  horaFin: horaFin,\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  if (params[key] !== \"\" && params[key] !== null) {\n    queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n  }\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\nreturn [{ \n  json: { \n    urlReserva: urlFinal, \n    idAsignado: idProfesional, \n    idProducto: idProducto, \n    productoDetectado: motivoConsulta, \n    datosMapeados: params \n  } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8160,
+        -384
+      ],
+      "id": "65a5b821-bc67-41cc-bcfe-66c3c9d11849",
+      "name": "Code in JavaScript14"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Revi\").first().json.body;\n\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\n// Solo se agregan los campos que realmente existan (todos son opcionales)\nconst bodyPaciente = {};\n\nif (data[\"NUMERO DE IDENTIDAD (DNI)\"]) {\n  bodyPaciente.tipoDocumento = \"DNI\";\n  bodyPaciente.documento = data[\"NUMERO DE IDENTIDAD (DNI)\"];\n}\nif (data.phone) bodyPaciente.telefono = data.phone;\n\nif (data.full_name) {\n  bodyPaciente.nombre = data.full_name;\n} else if (data.first_name || data.last_name) {\n  bodyPaciente.nombre = `${data.last_name || ''} ${data.first_name || ''}`.trim();\n}\n\nif (data.email) bodyPaciente.email = data.email;\nif (data.fecha_nacimiento) bodyPaciente.fechaNacimiento = data.fecha_nacimiento; // formato DD/MM/YYYY\nif (data.sexo) bodyPaciente.sexo = data.sexo.toUpperCase(); // MASCULINO / FEMENINO\n\nreturn [{ json: { urlFinal, bodyPaciente } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8368,
+        -752
+      ],
+      "id": "dfe03407-053f-46d1-93ef-2ba048c316c5",
+      "name": "Construir Body Post Paciente Meso4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.bodyPaciente) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -7968,
+        -720
+      ],
+      "id": "69a7d06e-5ef7-4f71-93a3-6a919239fa3b",
+      "name": "Post Paciente Skyia Meso4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9072,
+        -736
+      ],
+      "id": "83905527-8b1b-452b-b58a-b56a3845e27e",
+      "name": "Get Paciente Capilea2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const startTimeStr = $('Webhook Revi').first().json.body.calendar.startTime;\nconst fechaDesdeObj = new Date(startTimeStr);\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\nconst fechaDesde = formatFecha(fechaDesdeObj);\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\nconst params = {\n  numeroDocumento: $('Webhook Revi').first().json.body[\"NUMERO DE IDENTIDAD (DNI)\"],\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"getPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\nreturn [{ json: { fechaDesde, fechaHasta, urlFinal: urlFinal } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9328,
+        -736
+      ],
+      "id": "3982d26a-0b03-45da-8852-460b6d922778",
+      "name": "Construir URL Get Paciente2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f99cd462-651b-4c30-90db-51586633e79b",
+              "leftValue": "={{ $('Webhook Revi').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9872,
+        -720
+      ],
+      "id": "9e61872b-0ea5-4d2b-9af2-47ff09235708",
+      "name": "Tiene DNI2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7154ba10-14cf-4091-8cbc-b72d97162d7f",
+              "leftValue": "={{ $json.categoriaNecesaria == null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9904,
+        -336
+      ],
+      "id": "af6b477c-c17c-413c-885c-36d16cecce20",
+      "name": "Motivo Sin Reserva2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40c8a619-cb6d-4f56-b9b3-a3b386512d7b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8752,
+        -672
+      ],
+      "id": "4c32d736-b969-4b9c-9d4a-ba53ab243326",
+      "name": "Existe Paciente2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Dermo\").first().json.body;\nconst nombre = data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = data.phone || 'Sin telefono';\nconst producto = data.especialidad_dropdown || data.title || '';\nconst startTime = (data.calendar && data.calendar.startTime) ? data.calendar.startTime : '';\nconst mensaje = `⚠️ *Mesoterapia - Reserva sin DNI*\\nNo se pudo crear el paciente en Skyia: no llego el DNI.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nProducto: ${producto}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9600,
+        -1504
+      ],
+      "id": "90de293f-639e-4595-8e28-e5e844c04854",
+      "name": "Msg Sin DNI Meso4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Dermo\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Producto no reconocido*\\nNo se reconocio el producto/especialidad \"${producto}\" — revisar el mapping.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9568,
+        -1264
+      ],
+      "id": "3caa392d-91a9-45bf-a351-c7c079882c2c",
+      "name": "Msg Producto No Reconocido Meso4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Dermo\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Sin disponibilidad*\\nNo hay turno libre para \"${producto}\" en la fecha/hora solicitada.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9584,
+        -1120
+      ],
+      "id": "15dd103e-f73d-420c-9018-ca2bdef915ca",
+      "name": "Msg Sin Disponibilidad Meso4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: \"WhatsApp\", contactId: \"hAwdN7laeOOk4I9xlT6y\", message: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9120,
+        -1264
+      ],
+      "id": "43f0f3ad-6796-4c0b-b18e-dbe68352e507",
+      "name": "Enviar WhatsApp Meso4",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "={{ $json.urlReserva }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idAgenda\":\"{{ $json.datosMapeados.idAgenda }}\",\n  \"idRecurso\":\"{{ $json.datosMapeados.idRecurso }}\",\n  \"idPaciente\":\"{{ $json.datosMapeados.idPaciente }}\",\n  \"fecha\": \"{{ $json.datosMapeados.fecha }}\",\n  \"horaInicio\":\"{{ $json.datosMapeados.horaInicio }}\",\n  \"horaFin\":\"{{ $json.datosMapeados.horaFin }}\",\n  \"idProducto\": \"{{ $json.datosMapeados.idProducto }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -7856,
+        -1232
+      ],
+      "id": "93edf837-83d2-4f4d-98c2-299c183b9199",
+      "name": "Post CRM Capilea14",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Dermo\").first().json.body;\nconst cal = data.calendar;\nconst motivoConsulta = $('Tiene DNI3').first().json.producto;\n\n// idRecurso FIJO = 13 (Dermopigmentación) -- SIN CONFIRMAR contra\n// Belgrano, ver nota mas arriba. Antes: mapping de texto + default \"44\"\n// (recurso invalido) si no matcheaba exacto -- eso generaba turnos\n// \"huerfanos\" en Skyia invisibles para Vigilancia. Esta rama solo la\n// dispara \"Webhook Dermo\", asi que el recurso ya es conocido de antemano.\nconst idProfesional = \"13\";\n\n// idProducto: afina por texto dentro de ESTA especialidad; si no matchea\n// nada cae a un idProducto valido de la misma especialidad (nunca a un\n// default invalido ni cruzado con otra especialidad).\nconst productoMapping = {};\nlet idProducto = 11;\nif (motivoConsulta) {\n  const motivoUpper = motivoConsulta.toUpperCase();\n  for (const [keyword, id] of Object.entries(productoMapping)) {\n    if (motivoUpper.includes(keyword)) { idProducto = id; break; }\n  }\n}\n\nconst [fechaPart, horaInicioFull] = cal.startTime.split('T');\nconst [year, month, day] = fechaPart.split('-');\nconst fechaFormateada = `${day}/${month}/${year}`;\nconst horaInicio = horaInicioFull.substring(0, 5);\nconst horaFin = cal.endTime.split('T')[1].substring(0, 5);\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postAgendaEvento\",\n  idAgenda: parseInt(\"2\"),\n  idRecurso: idProfesional,\n  idPaciente: $input.first().json.idPaciente,\n  idProducto: idProducto,\n  fecha: fechaFormateada,\n  horaInicio: horaInicio,\n  horaFin: horaFin,\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  if (params[key] !== \"\" && params[key] !== null) {\n    queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n  }\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\nreturn [{ \n  json: { \n    urlReserva: urlFinal, \n    idAsignado: idProfesional, \n    idProducto: idProducto, \n    productoDetectado: motivoConsulta, \n    datosMapeados: params \n  } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8144,
+        -1232
+      ],
+      "id": "fb1ef4ab-f934-4b2f-acbe-0ff0970be231",
+      "name": "Code in JavaScript15"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Dermo\").first().json.body;\n\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\n// Solo se agregan los campos que realmente existan (todos son opcionales)\nconst bodyPaciente = {};\n\nif (data[\"NUMERO DE IDENTIDAD (DNI)\"]) {\n  bodyPaciente.tipoDocumento = \"DNI\";\n  bodyPaciente.documento = data[\"NUMERO DE IDENTIDAD (DNI)\"];\n}\nif (data.phone) bodyPaciente.telefono = data.phone;\n\nif (data.full_name) {\n  bodyPaciente.nombre = data.full_name;\n} else if (data.first_name || data.last_name) {\n  bodyPaciente.nombre = `${data.last_name || ''} ${data.first_name || ''}`.trim();\n}\n\nif (data.email) bodyPaciente.email = data.email;\nif (data.fecha_nacimiento) bodyPaciente.fechaNacimiento = data.fecha_nacimiento; // formato DD/MM/YYYY\nif (data.sexo) bodyPaciente.sexo = data.sexo.toUpperCase(); // MASCULINO / FEMENINO\n\nreturn [{ json: { urlFinal, bodyPaciente } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8352,
+        -1600
+      ],
+      "id": "d032d64f-8ac6-4e6d-8825-025e86b74083",
+      "name": "Construir Body Post Paciente Meso5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.bodyPaciente) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -7952,
+        -1568
+      ],
+      "id": "315daff0-4f37-43ef-80ac-f149ad08dce5",
+      "name": "Post Paciente Skyia Meso5",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9056,
+        -1584
+      ],
+      "id": "b46f6f11-4ec5-469c-bb81-2f0e78df87ad",
+      "name": "Get Paciente Capilea3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const startTimeStr = $('Webhook Dermo').first().json.body.calendar.startTime;\nconst fechaDesdeObj = new Date(startTimeStr);\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\nconst fechaDesde = formatFecha(fechaDesdeObj);\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\nconst params = {\n  numeroDocumento: $('Webhook Dermo').first().json.body[\"NUMERO DE IDENTIDAD (DNI)\"],\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"getPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\nreturn [{ json: { fechaDesde, fechaHasta, urlFinal: urlFinal } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9312,
+        -1584
+      ],
+      "id": "82b0868b-5d8c-4698-96c8-ca5d5ad0d356",
+      "name": "Construir URL Get Paciente3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f99cd462-651b-4c30-90db-51586633e79b",
+              "leftValue": "={{ $('Webhook Dermo').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9856,
+        -1568
+      ],
+      "id": "4e32628a-aedb-4de3-95f0-11231a714be0",
+      "name": "Tiene DNI3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7154ba10-14cf-4091-8cbc-b72d97162d7f",
+              "leftValue": "={{ $json.categoriaNecesaria == null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9888,
+        -1184
+      ],
+      "id": "3d2fdb62-8c21-463d-9ca0-04726e46cf23",
+      "name": "Motivo Sin Reserva3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Meso\").first().json.body;\nconst nombre = data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = data.phone || 'Sin telefono';\nconst producto = data.especialidad_dropdown || data.title || '';\nconst startTime = (data.calendar && data.calendar.startTime) ? data.calendar.startTime : '';\nconst mensaje = `⚠️ *Mesoterapia - Reserva sin DNI*\\nNo se pudo crear el paciente en Skyia: no llego el DNI.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nProducto: ${producto}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9872,
+        -2384
+      ],
+      "id": "9533951c-b6bd-47dd-8376-5c6e1ec95d51",
+      "name": "Msg Sin DNI Meso5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Meso\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Producto no reconocido*\\nNo se reconocio el producto/especialidad \"${producto}\" — revisar el mapping.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9840,
+        -2144
+      ],
+      "id": "b5367867-9e94-42f5-8321-b815fbecedf7",
+      "name": "Msg Producto No Reconocido Meso5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $(\"Webhook Meso\").first().json.body;\nconst nombre = webhookData.full_name || `${webhookData.first_name || ''} ${webhookData.last_name || ''}`.trim() || 'Sin nombre';\nconst telefono = webhookData.phone || 'Sin telefono';\nconst producto = $json.producto || '';\nconst startTime = $json.startTimeValidado || '';\nconst mensaje = `⚠️ *Mesoterapia - Sin disponibilidad*\\nNo hay turno libre para \"${producto}\" en la fecha/hora solicitada.\\nPaciente: ${nombre}\\nTel: ${telefono}\\nFecha/hora: ${startTime}`;\nreturn [{ json: { contactId: \"ca0hQ9pCYPnxuZexRY22\", mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9840,
+        -1952
+      ],
+      "id": "21f67b72-4f48-4de9-a30b-de5a54981528",
+      "name": "Msg Sin Disponibilidad Meso5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: \"WhatsApp\", contactId: \"hAwdN7laeOOk4I9xlT6y\", message: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9392,
+        -2144
+      ],
+      "id": "4b2f82f6-f4cc-468d-8c45-0b0cb547f0df",
+      "name": "Enviar WhatsApp Meso5",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "={{ $json.urlReserva }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idAgenda\":\"{{ $json.datosMapeados.idAgenda }}\",\n  \"idRecurso\":\"{{ $json.datosMapeados.idRecurso }}\",\n  \"idPaciente\":\"{{ $json.datosMapeados.idPaciente }}\",\n  \"fecha\": \"{{ $json.datosMapeados.fecha }}\",\n  \"horaInicio\":\"{{ $json.datosMapeados.horaInicio }}\",\n  \"horaFin\":\"{{ $json.datosMapeados.horaFin }}\",\n  \"idProducto\": \"{{ $json.datosMapeados.idProducto }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -8128,
+        -2112
+      ],
+      "id": "55cac198-c5e2-41d9-9123-2870403b4f10",
+      "name": "Post CRM Capilea15",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Meso\").first().json.body;\nconst cal = data.calendar;\nconst motivoConsulta = $('Tiene DNI4').first().json.producto;\n\n// idRecurso FIJO = 10 (Mesoterapia) -- SIN CONFIRMAR contra\n// Belgrano, ver nota mas arriba. Antes: mapping de texto + default \"44\"\n// (recurso invalido) si no matcheaba exacto -- eso generaba turnos\n// \"huerfanos\" en Skyia invisibles para Vigilancia. Esta rama solo la\n// dispara \"Webhook Meso\", asi que el recurso ya es conocido de antemano.\nconst idProfesional = \"10\";\n\n// idProducto: afina por texto dentro de ESTA especialidad; si no matchea\n// nada cae a un idProducto valido de la misma especialidad (nunca a un\n// default invalido ni cruzado con otra especialidad).\nconst productoMapping = { \"MESOTERAPIA 1 PO\": 40, \"MESOTERAPIA 1\": 13, \"MESOTERAPIA FOTOS\": 14, \"MESOTERAPIA CONTROL\": 15, \"MESOTERAPIA CON CORTICOIDES\": 35, \"MESOTERAPIA REFUERZO COMBINADO\": 38, \"MESOTERAPIA REFUERZO\": 34, \"MESOTERAPIA BONIFCADA\": 45, \"MESOTERAPIA BONIFICADA\": 45, \"MESOTERAPIA COMBINADO\": 37 };\nlet idProducto = 2;\nif (motivoConsulta) {\n  const motivoUpper = motivoConsulta.toUpperCase();\n  for (const [keyword, id] of Object.entries(productoMapping)) {\n    if (motivoUpper.includes(keyword)) { idProducto = id; break; }\n  }\n}\n\nconst [fechaPart, horaInicioFull] = cal.startTime.split('T');\nconst [year, month, day] = fechaPart.split('-');\nconst fechaFormateada = `${day}/${month}/${year}`;\nconst horaInicio = horaInicioFull.substring(0, 5);\nconst horaFin = cal.endTime.split('T')[1].substring(0, 5);\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postAgendaEvento\",\n  idAgenda: parseInt(\"2\"),\n  idRecurso: idProfesional,\n  idPaciente: $input.first().json.idPaciente,\n  idProducto: idProducto,\n  fecha: fechaFormateada,\n  horaInicio: horaInicio,\n  horaFin: horaFin,\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  if (params[key] !== \"\" && params[key] !== null) {\n    queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n  }\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\nreturn [{ \n  json: { \n    urlReserva: urlFinal, \n    idAsignado: idProfesional, \n    idProducto: idProducto, \n    productoDetectado: motivoConsulta, \n    datosMapeados: params \n  } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8416,
+        -2112
+      ],
+      "id": "3a639a20-9b9f-4ada-b35c-139b92265ff0",
+      "name": "Code in JavaScript16"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $(\"Webhook Meso\").first().json.body;\n\nconst params = {\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"postPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\n\n// Solo se agregan los campos que realmente existan (todos son opcionales)\nconst bodyPaciente = {};\n\nif (data[\"NUMERO DE IDENTIDAD (DNI)\"]) {\n  bodyPaciente.tipoDocumento = \"DNI\";\n  bodyPaciente.documento = data[\"NUMERO DE IDENTIDAD (DNI)\"];\n}\nif (data.phone) bodyPaciente.telefono = data.phone;\n\nif (data.full_name) {\n  bodyPaciente.nombre = data.full_name;\n} else if (data.first_name || data.last_name) {\n  bodyPaciente.nombre = `${data.last_name || ''} ${data.first_name || ''}`.trim();\n}\n\nif (data.email) bodyPaciente.email = data.email;\nif (data.fecha_nacimiento) bodyPaciente.fechaNacimiento = data.fecha_nacimiento; // formato DD/MM/YYYY\nif (data.sexo) bodyPaciente.sexo = data.sexo.toUpperCase(); // MASCULINO / FEMENINO\n\nreturn [{ json: { urlFinal, bodyPaciente } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8624,
+        -2480
+      ],
+      "id": "9ee4417d-4a32-4cd1-a9f2-f8b5553c03fd",
+      "name": "Construir Body Post Paciente Meso6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.bodyPaciente) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -8224,
+        -2448
+      ],
+      "id": "1b0360e4-d457-40fd-8ab9-b529d8c87f85",
+      "name": "Post Paciente Skyia Meso6",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -9328,
+        -2464
+      ],
+      "id": "974711bf-017b-4022-b297-b1a7b80fe8f1",
+      "name": "Get Paciente Capilea4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const startTimeStr = $('Webhook Meso').first().json.body.calendar.startTime;\nconst fechaDesdeObj = new Date(startTimeStr);\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\nconst fechaDesde = formatFecha(fechaDesdeObj);\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\nconst params = {\n  numeroDocumento: $('Webhook Meso').first().json.body[\"NUMERO DE IDENTIDAD (DNI)\"],\n  x: \"REEMPLAZAR_SKYIA_API_KEY\",\n  api: \"getPaciente\"\n};\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst queryArray = [];\nfor (const key in params) {\n  queryArray.push(`${key}=${encodeURIComponent(params[key])}`);\n}\nconst urlFinal = `${baseUrl}?${queryArray.join('&')}`;\nreturn [{ json: { fechaDesde, fechaHasta, urlFinal: urlFinal } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9584,
+        -2464
+      ],
+      "id": "37338178-b4f6-4c8b-b986-cb216dfa88ac",
+      "name": "Construir URL Get Paciente4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f99cd462-651b-4c30-90db-51586633e79b",
+              "leftValue": "={{ $('Webhook Meso').item.json.body[\"NUMERO DE IDENTIDAD (DNI)\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10128,
+        -2448
+      ],
+      "id": "f471684b-8b54-4d63-abbe-760e068a6810",
+      "name": "Tiene DNI4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7154ba10-14cf-4091-8cbc-b72d97162d7f",
+              "leftValue": "={{ $json.categoriaNecesaria == null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -10160,
+        -2064
+      ],
+      "id": "7ce11494-0fac-459b-8fb6-df306a2dec73",
+      "name": "Motivo Sin Reserva4"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlFinal }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REEMPLAZAR_TOKEN_SKYIA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -10864,
+        272
+      ],
+      "id": "64ae1f38-11b6-44d3-9064-1906c88fd686",
+      "name": "Get Free Slots CRM Capilea5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalInput = $(\"Webhook PRP\").first().json; \nconst startTimeStr = originalInput.startTime || (originalInput.body && originalInput.body.calendar ? originalInput.body.calendar.startTime : null); \nconst motivoConsulta = originalInput.especialidad_dropdown || (originalInput.body ? originalInput.body.especialidad_dropdown : originalInput.title); \nif (!startTimeStr) { throw new Error(\"No se pudo encontrar 'startTime' en el input de GHL.\"); }\n\n// idRecurso FIJO (PRP) -- SIN CONFIRMAR contra el catalogo real\n// de Skyia de Belgrano (getAgendaRecursos). Es el valor que ya estaba\n// \"intencionado\" en el mapping de texto viejo, ahora fijo en vez de\n// depender de un match de texto con default invalido (\"44\"). Esta rama\n// solo la dispara \"Webhook PRP\", asi que el recurso ya es conocido.\nconst targetIdProfesional = 7;\n\nconst [targetDate, targetFullTime] = startTimeStr.split('T');\nconst [tH, tM] = targetFullTime.substring(0, 5).split(':');\nconst targetTimePadded = `${tH.padStart(2, '0')}:${tM}`;\nlet existeTurno = false;\nfor (const item of items) {\n  const slot = item.json;\n  let slotHoraPadded = \"\";\n  if (slot.horaInicio) slotHoraPadded = slot.horaInicio.substring(0, 5);\n  if (Number(slot.idEntidad) === targetIdProfesional && slotHoraPadded === targetTimePadded) {\n    if (slot.fecha === targetDate) { existeTurno = true; break; }\n  }\n}\nreturn [{ json: { startTimeValidado: startTimeStr, producto: motivoConsulta, categoriaNecesaria: targetIdProfesional, disponible: existeTurno } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -10624,
+        272
+      ],
+      "id": "d09f472a-31ad-471e-a267-86fdde508f37",
+      "name": "Check Disponibilidad Skyia5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el startTime del JSON de entrada\nconst startTimeStr = items[0].json.body.calendar.startTime;\n\n// Creamos un objeto Date a partir del startTime\nconst fechaDesdeObj = new Date(startTimeStr);\n\n// Función para formatear fecha a DD/MM/YYYY\nconst formatFecha = (date) => {\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses van de 0-11\n  const year = date.getFullYear();\n  return `${day}/${month}/${year}`;\n};\n\n// Calculamos fechaDesde\nfechaDesdeObj.setDate(fechaDesdeObj.getDate());\nconst fechaDesde = formatFecha(fechaDesdeObj);\n\n// Calculamos fechaHasta (sumando 1 día)\nconst fechaHastaObj = new Date(fechaDesdeObj);\nfechaHastaObj.setDate(fechaHastaObj.getDate() + 1);\nconst fechaHasta = formatFecha(fechaHastaObj);\n\n// Construimos la URL final\nconst baseUrl = \"https://api.cloud.skyia.ar/skyia_api\";\nconst params = `?api=getAgendaTurnosLibres&x=REEMPLAZAR_SKYIA_API_KEY&idAgenda=2&tipoAgenda=OTRO&idSucursal=1&duracionTurno=15&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`;\n\n// Retornamos los datos procesados\nreturn [{\n  json: {\n    fechaDesde,\n    fechaHasta,\n    urlFinal: baseUrl + params\n  }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11104,
+        272
+      ],
+      "id": "2195450d-61dc-4b7c-bd6a-c85b9933c245",
+      "name": "Construir URL Free Slots Skyia6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40c8a619-cb6d-4f56-b9b3-a3b386512d7b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9008,
+        -2400
+      ],
+      "id": "61a20b0f-b0b4-482b-ab14-0169fa0e721e",
+      "name": "No Existe Paciente?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40c8a619-cb6d-4f56-b9b3-a3b386512d7b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8736,
+        -1520
+      ],
+      "id": "80df4ad6-6a22-47c7-baf0-ec2e879db74b",
+      "name": "No Existe Paciente?2"
+    },
+    {
+      "parameters": {
+        "content": "## Rama Mesoterapia (Webhook Meso)\n\nRecepción → disponibilidad en Skyia → DNI → paciente → turno. Alertas por WhatsApp si falta información.",
+        "height": 868,
+        "width": 3908,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11886,
+        -2650
+      ],
+      "id": "b7ba0025-aff2-4ced-9de5-7d4f26fe6d27",
+      "name": "Doc - Seccion 1"
+    },
+    {
+      "parameters": {
+        "content": "## Rama Dermopigmentación (Webhook Dermo)\n\nMismo proceso para el calendario de dermopigmentación (idRecurso 13).",
+        "height": 820,
+        "width": 3956,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11662,
+        -1770
+      ],
+      "id": "f02094af-79cd-48f1-bc9d-330fa9a43112",
+      "name": "Doc - Seccion 2"
+    },
+    {
+      "parameters": {
+        "content": "## Rama Revisaciones (Webhook Revi)\n\nMismo proceso para el calendario de revisaciones (idRecurso 5).",
+        "height": 900,
+        "width": 3892,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11614,
+        -922
+      ],
+      "id": "2058bdd6-e413-4897-a931-c09fccd6958b",
+      "name": "Doc - Seccion 3"
+    },
+    {
+      "parameters": {
+        "content": "## Rama PRP (Webhook PRP)\n\nMismo proceso para el calendario de PRP (idRecurso 7).",
+        "height": 868,
+        "width": 3940,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11630,
+        6
+      ],
+      "id": "a495df35-f78c-40b5-9fb2-6ac17aeba3ee",
+      "name": "Doc - Seccion 4"
+    },
+    {
+      "parameters": {
+        "content": "## Rama Controles (Webhook Control)\n\nMismo proceso para el calendario de controles (idRecurso 3).",
+        "height": 746,
+        "width": 4004,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11678,
+        880
+      ],
+      "id": "78a4d2f5-5952-4bf8-9f71-ef66ae2687e3",
+      "name": "Doc - Seccion 5"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 Calendarios Capilea\n\n**Cliente:** Capilea (sucursal Belgrano)\n\n**Objetivo:** Recibe las citas agendadas en los calendarios de GHL, valida la disponibilidad en Skyia y crea el paciente y el turno en Skyia.\n\n**Disparador:** 5 Webhooks POST (uno por calendario de GHL): `MesoCapileaCRM`, `CapileaCRMdermopigmentacion`, `CapileaCRMrevisiones`, `PRPCapileaCRM`, `ControlCapileaCRM`.\n\n**Integraciones:** GoHighLevel (webhooks de calendario + API de mensajes), Skyia API (`api.cloud.skyia.ar`)\n\n**Credenciales a asignar al importar:**\n- Header Auth: Auth Belgrano, Auth RAMOS\n\n**Valores a reemplazar (secretos retirados del repo):**\n- `REEMPLAZAR_SKYIA_API_KEY`\n- `REEMPLAZAR_TOKEN_SKYIA`\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/capilea/calendarios-capilea/README.md",
+        "height": 628,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11886,
+        -3638
+      ],
+      "id": "bddccaca-818f-4587-9028-121eb34b7c03",
+      "name": "Doc - Ficha del flujo"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del flujo: Calendarios Capilea\n\n### 1. Recepción de la cita\n- GHL llama al webhook de la especialidad cuando se agenda una cita. El nodo `Respond to Webhook` responde de inmediato para que GHL no espere.\n- `Construir URL Free Slots Skyia` arma la consulta `getAgendaTurnosLibres` a Skyia para la fecha de la cita.\n\n### 2. Validación de disponibilidad\n- `Get Free Slots CRM Capilea` trae los turnos libres de Skyia.\n- `Check Disponibilidad Skyia` busca un turno libre con el mismo `idRecurso` (profesional/especialidad, valor fijo por rama) y la misma fecha y hora.\n- Si **no** hay turno libre → `Motivo Sin Reserva` decide el mensaje (producto no reconocido o sin disponibilidad).\n\n### 3. Paciente en Skyia\n- `Tiene DNI` verifica que el contacto tenga el campo *NUMERO DE IDENTIDAD*. Si no lo tiene, se avisa por WhatsApp al equipo interno.\n- `Construir URL Get Paciente` + `Get Paciente Capilea` buscan al paciente por DNI en Skyia.\n- Si no existe → `Construir Body Post Paciente` + `Post Paciente Skyia` lo crean (`postPaciente`).\n\n### 4. Reserva del turno\n- Los nodos `Code in JavaScript*` arman la llamada `postAgendaEvento` con el `idRecurso` fijo de la rama y el `idProducto` según el texto de la especialidad.\n- `Post CRM Capilea*` crea el turno en Skyia.\n\n### 5. Alertas internas\n- Los nodos `Msg ...` construyen el texto de alerta (sin DNI, producto no reconocido) y `Enviar WhatsApp ...` lo envía por GHL a un contacto interno fijo.\n\n### ⚠️ Observaciones\n- Los nodos `Msg Sin Disponibilidad ...` no están conectados a ningún envío, por lo que ese aviso nunca sale. Como `categoriaNecesaria` es fijo, `Motivo Sin Reserva` siempre toma la rama *sin disponibilidad*.\n- Tiene configurado un *Error Workflow* (`2nO4EfS90U7HC6hG`) que no forma parte de este repositorio.",
+        "height": 868,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11106,
+        -3638
+      ],
+      "id": "7e124a23-7bf3-4104-83b7-f3fb94c56027",
+      "name": "Doc - Descripcion del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Free Slots CRM Capilea": {
+      "main": [
+        [
+          {
+            "node": "Check Disponibilidad Skyia0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Tiene DNI4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Motivo Sin Reserva4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Free Slots Skyia": {
+      "main": [
+        [
+          {
+            "node": "Get Free Slots CRM Capilea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Free Slots CRM Capilea2": {
+      "main": [
+        [
+          {
+            "node": "Check Disponibilidad Skyia1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Tiene DNI3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Motivo Sin Reserva3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Free Slots Skyia1": {
+      "main": [
+        [
+          {
+            "node": "Get Free Slots CRM Capilea2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Free Slots CRM Capilea4": {
+      "main": [
+        [
+          {
+            "node": "Check Disponibilidad Skyia3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Tiene DNI2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Motivo Sin Reserva2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Free Slots Skyia2": {
+      "main": [
+        [
+          {
+            "node": "Get Free Slots CRM Capilea4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Dermo": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Revi": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Disponibilidad Skyia0": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Disponibilidad Skyia3": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Disponibilidad Skyia1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Tiene DNI1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Motivo Sin Reserva1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Tiene DNI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Motivo Sin Reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Meso": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook PRP": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Control": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Free Slots Skyia1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Free Slots Skyia2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Free Slots Skyia6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook3": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Free Slots Skyia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook5": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Free Slots Skyia3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin DNI Meso": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Producto No Reconocido Meso": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin Disponibilidad Meso": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript13": {
+      "main": [
+        [
+          {
+            "node": "Post CRM Capilea11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Body Post Paciente Meso2": {
+      "main": [
+        [
+          {
+            "node": "Post Paciente Skyia Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Paciente Skyia Meso2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Free Slots CRM Capilea1": {
+      "main": [
+        [
+          {
+            "node": "Check Disponibilidad Skyia4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Disponibilidad Skyia4": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Free Slots Skyia3": {
+      "main": [
+        [
+          {
+            "node": "Get Free Slots CRM Capilea1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Paciente Capilea": {
+      "main": [
+        [
+          {
+            "node": "Existe Paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Get Paciente": {
+      "main": [
+        [
+          {
+            "node": "Get Paciente Capilea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene DNI": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Get Paciente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin DNI Meso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivo Sin Reserva": {
+      "main": [
+        [
+          {
+            "node": "Msg Producto No Reconocido Meso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin Disponibilidad Meso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existe Paciente": {
+      "main": [
+        [
+          {
+            "node": "Construir Body Post Paciente Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin DNI Meso2": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Producto No Reconocido Meso2": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin Disponibilidad Meso2": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Post CRM Capilea12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Body Post Paciente Meso3": {
+      "main": [
+        [
+          {
+            "node": "Post Paciente Skyia Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Paciente Skyia Meso3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Paciente Capilea1": {
+      "main": [
+        [
+          {
+            "node": "Existe Paciente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Get Paciente1": {
+      "main": [
+        [
+          {
+            "node": "Get Paciente Capilea1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene DNI1": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Get Paciente1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin DNI Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivo Sin Reserva1": {
+      "main": [
+        [
+          {
+            "node": "Msg Producto No Reconocido Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin Disponibilidad Meso2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existe Paciente1": {
+      "main": [
+        [
+          {
+            "node": "Construir Body Post Paciente Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin DNI Meso3": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Producto No Reconocido Meso3": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin Disponibilidad Meso3": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript14": {
+      "main": [
+        [
+          {
+            "node": "Post CRM Capilea13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Body Post Paciente Meso4": {
+      "main": [
+        [
+          {
+            "node": "Post Paciente Skyia Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Paciente Skyia Meso4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Paciente Capilea2": {
+      "main": [
+        [
+          {
+            "node": "Existe Paciente2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Get Paciente2": {
+      "main": [
+        [
+          {
+            "node": "Get Paciente Capilea2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene DNI2": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Get Paciente2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin DNI Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivo Sin Reserva2": {
+      "main": [
+        [
+          {
+            "node": "Msg Producto No Reconocido Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin Disponibilidad Meso3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existe Paciente2": {
+      "main": [
+        [
+          {
+            "node": "Construir Body Post Paciente Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin DNI Meso4": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Producto No Reconocido Meso4": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin Disponibilidad Meso4": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript15": {
+      "main": [
+        [
+          {
+            "node": "Post CRM Capilea14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Body Post Paciente Meso5": {
+      "main": [
+        [
+          {
+            "node": "Post Paciente Skyia Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Paciente Skyia Meso5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Paciente Capilea3": {
+      "main": [
+        [
+          {
+            "node": "No Existe Paciente?2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Get Paciente3": {
+      "main": [
+        [
+          {
+            "node": "Get Paciente Capilea3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene DNI3": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Get Paciente3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin DNI Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivo Sin Reserva3": {
+      "main": [
+        [
+          {
+            "node": "Msg Producto No Reconocido Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin Disponibilidad Meso4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin DNI Meso5": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Producto No Reconocido Meso5": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg Sin Disponibilidad Meso5": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript16": {
+      "main": [
+        [
+          {
+            "node": "Post CRM Capilea15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Body Post Paciente Meso6": {
+      "main": [
+        [
+          {
+            "node": "Post Paciente Skyia Meso6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Paciente Skyia Meso6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Paciente Capilea4": {
+      "main": [
+        [
+          {
+            "node": "No Existe Paciente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Get Paciente4": {
+      "main": [
+        [
+          {
+            "node": "Get Paciente Capilea4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene DNI4": {
+      "main": [
+        [
+          {
+            "node": "Construir URL Get Paciente4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin DNI Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivo Sin Reserva4": {
+      "main": [
+        [
+          {
+            "node": "Msg Producto No Reconocido Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg Sin Disponibilidad Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Free Slots CRM Capilea5": {
+      "main": [
+        [
+          {
+            "node": "Check Disponibilidad Skyia5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Disponibilidad Skyia5": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL Free Slots Skyia6": {
+      "main": [
+        [
+          {
+            "node": "Get Free Slots CRM Capilea5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Existe Paciente?": {
+      "main": [
+        [
+          {
+            "node": "Construir Body Post Paciente Meso6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Existe Paciente?2": {
+      "main": [
+        [
+          {
+            "node": "Construir Body Post Paciente Meso5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "2nO4EfS90U7HC6hG"
+  },
+  "versionId": "f15926eb-cf69-46ec-96ce-0a74a4212958",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "039fce773344de013634923d5a2bb656abb0045ca113d3fd7a7a61d949da1a5e"
+  },
+  "nodeGroups": [],
+  "id": "CLvzIZPEFLEVYOxV",
+  "tags": [
+    {
+      "updatedAt": "2026-04-22T01:37:42.855Z",
+      "createdAt": "2026-04-22T01:37:42.855Z",
+      "id": "0wWWdYshBYrVSsTd",
+      "name": "Belgrano"
+    }
+  ]
+}

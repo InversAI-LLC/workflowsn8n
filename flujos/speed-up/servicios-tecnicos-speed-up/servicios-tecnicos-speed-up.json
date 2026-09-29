@@ -1,0 +1,1099 @@
+{
+  "name": "Agente Servicios Tecnicos Speed Up",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "speedUpRegistroVehicular",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST,OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        240
+      ],
+      "webhookId": "c4c71ded-ed85-4ff6-b020-01b7272aa787",
+      "id": "03fb796d-d51d-46a2-a2c9-2657be026142",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1ksTSniJMmYt6SMuONYwyGoXaF8FKfGOjKqli00jghWI/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Transaction_ID": "={{ $json.transaction_id }}",
+            "Contact_ID": "={{ $('Webhook1').item.json.body.customData.contact_ID }}",
+            "Nombre": "={{ $('Webhook1').item.json.body.first_name }}",
+            "Apellido": "={{ $('Webhook1').item.json.body.last_name }}",
+            "Cedula": "={{ $('Webhook1').item.json.body.cedula_ruc }}",
+            "Kilometraje": "={{ $('Webhook1').item.json.body.temp_kilometraje_vehiculo }}",
+            "Color": "={{ $('Webhook1').item.json.body.temp_color_vehiculo }}",
+            "Placa": "={{ $('Webhook1').item.json.body.temp_placa_vehiculo }}",
+            "Año": "={{ $('Webhook1').item.json.body.temp_anio_vehiculo }}",
+            "Marca": "={{ $('Webhook1').item.json.body.temp_marca_vehiculo }}",
+            "Tipo_Vehiculo": "={{ $('Webhook1').item.json.body.temp_modelo_vehiculo }}",
+            "Fecha_Completacion": "={{ $('Webhook1').item.json.body.customData.hora_fin_step }}",
+            "Fecha_Inicio": "={{ $('Webhook1').item.json.body.customData.hora_inicio_step }}",
+            "Pipeline_Stage": "={{ $('Webhook1').item.json.body.customData.etapa_anterior }}",
+            "Tipo_Servicio": "={{ $('Webhook1').item.json.body.customData.TipoServicio }}",
+            "Reformateo_horas_FinServicio": "=-",
+            "Fin_Servicio": "-",
+            "Duracion_minutos": "={{ $json.minutos }}",
+            "Reformateo_horas_Etapa": "={{ $json.tiempo_formateado }}",
+            "Duracion_horas": "={{ $json.horas }}",
+            "Observaciones": "={{ $('Webhook1').item.json.body['Tareas o accesorios solicitados'] }}",
+            "Nuevo_o_Registrado": "={{ $('Webhook1').item.json.body['Vehículo nuevo o registrado'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Transaction_ID",
+              "displayName": "Transaction_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact_ID",
+              "displayName": "Contact_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Apellido",
+              "displayName": "Apellido",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cedula",
+              "displayName": "Cedula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo_Vehiculo",
+              "displayName": "Tipo_Vehiculo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Marca",
+              "displayName": "Marca",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Placa",
+              "displayName": "Placa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Año",
+              "displayName": "Año",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Color",
+              "displayName": "Color",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Kilometraje",
+              "displayName": "Kilometraje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nuevo_o_Registrado",
+              "displayName": "Nuevo_o_Registrado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_Inicio",
+              "displayName": "Fecha_Inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_Completacion",
+              "displayName": "Fecha_Completacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duracion_horas",
+              "displayName": "Duracion_horas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reformateo_horas_Etapa",
+              "displayName": "Reformateo_horas_Etapa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duracion_minutos",
+              "displayName": "Duracion_minutos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo_Servicio",
+              "displayName": "Tipo_Servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pipeline_Stage",
+              "displayName": "Pipeline_Stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observaciones",
+              "displayName": "Observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fin_Servicio",
+              "displayName": "Fin_Servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reformateo_horas_FinServicio",
+              "displayName": "Reformateo_horas_FinServicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        688,
+        240
+      ],
+      "id": "1a761c0a-5a8f-404c-b27d-8550a227cdbd",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1PZsx8SSjjYVtdwD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getTimeBetweenDates",
+        "startDate": "={{ $json.body.customData.hora_inicio_step }}",
+        "endDate": "={{ $json.body.customData.hora_fin_step }}",
+        "units": [
+          "hour"
+        ],
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        64,
+        240
+      ],
+      "id": "1704c35f-f98e-418b-ad14-6cdcff444e78",
+      "name": "Date & Time",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1ad33e0-dddc-4d73-8eab-656171a08915",
+              "name": "horas",
+              "value": "={{ Math.round($('Date & Time').item.json.timeDifference.hours / 0.05) * 0.05  }}",
+              "type": "string"
+            },
+            {
+              "id": "d157b8cf-701c-4641-b231-c2fc0514d90b",
+              "name": "minutos",
+              "value": "={{ Math.round($('Date & Time').item.json.timeDifference.hours / 0.05) * 0.05 * 60 }}",
+              "type": "string"
+            },
+            {
+              "id": "55b9eda8-19e4-4a83-9c94-d4370c4f8b1f",
+              "name": "transaction_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        240
+      ],
+      "id": "0899d4f0-4910-4523-bf60-a9048dc64232",
+      "name": "TiempoHoras"
+    },
+    {
+      "parameters": {
+        "operation": "getTimeBetweenDates",
+        "startDate": "={{ $('Webhook1').item.json.body.Hora_Inicio_Servicio }}",
+        "endDate": "={{ $('Webhook1').item.json.body.Hora_Fin_Servicio }}",
+        "units": [
+          "hour"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        112
+      ],
+      "id": "8d399b6a-7dc2-44f1-bb57-c4a41cf21b4e",
+      "name": "Date & Time1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1ksTSniJMmYt6SMuONYwyGoXaF8FKfGOjKqli00jghWI/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fin_Servicio": "={{ $json.tiempoTotal }}",
+            "Reformateo_horas_FinServicio": "={{ $json.tiempoTotalFormateado }}",
+            "Transaction_ID": "={{ $('Append row in sheet').last().json.Transaction_ID }}"
+          },
+          "matchingColumns": [
+            "Transaction_ID"
+          ],
+          "schema": [
+            {
+              "id": "Transaction_ID",
+              "displayName": "Transaction_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Contact_ID",
+              "displayName": "Contact_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Apellido",
+              "displayName": "Apellido",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Cedula",
+              "displayName": "Cedula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo_Vehiculo",
+              "displayName": "Tipo_Vehiculo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Marca",
+              "displayName": "Marca",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Placa",
+              "displayName": "Placa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Año",
+              "displayName": "Año",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Color",
+              "displayName": "Color",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Kilometraje",
+              "displayName": "Kilometraje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Nuevo_o_Registrado",
+              "displayName": "Nuevo_o_Registrado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Fecha_Inicio",
+              "displayName": "Fecha_Inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Fecha_Completacion",
+              "displayName": "Fecha_Completacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Duracion_horas",
+              "displayName": "Duracion_horas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reformateo_horas_Etapa",
+              "displayName": "Reformateo_horas_Etapa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Duracion_minutos",
+              "displayName": "Duracion_minutos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo_Servicio",
+              "displayName": "Tipo_Servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Pipeline_Stage",
+              "displayName": "Pipeline_Stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Observaciones",
+              "displayName": "Observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Fin_Servicio",
+              "displayName": "Fin_Servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reformateo_horas_FinServicio",
+              "displayName": "Reformateo_horas_FinServicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2336,
+        112
+      ],
+      "id": "25532ebf-08ef-4e79-9050-99fdd17e0a3c",
+      "name": "Update row in sheet",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1PZsx8SSjjYVtdwD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9d8b86f-d8bc-4fc5-a3b6-a508f7029672",
+              "name": "horas",
+              "value": "={{ Math.round($('Date & Time1').item.json.timeDifference.hours / 0.05) * 0.05  }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1408,
+        112
+      ],
+      "id": "3b293ddd-dcd0-46ba-b4a3-67ac06462cce",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recoge el item de entrada\nconst item = $input.item;\n// Obtiene el valor de horas decimales del nodo anterior\nconst decimalHours = $input.first().json.horas; \n\n// Calcula las horas completas (la parte entera)\nconst hours = Math.floor(decimalHours);\n\n// Calcula los minutos\n// 1. Obtiene la parte decimal (ej. 5.75 - 5 = 0.75)\n// 2. Multiplica por 60 para obtener los minutos (ej. 0.75 * 60 = 45)\n// 3. Redondea para evitar decimales extraños por la precisión del punto flotante\nconst minutes = Math.round((decimalHours - hours) * 60);\n\n// Crea el nuevo campo con el formato \"X hrs Y min\"\nitem.json.tiempo_formateado = `${hours} hrs ${minutes} min`;\n\n// Devuelve el item original con el nuevo campo añadido\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        240
+      ],
+      "id": "d5e9ad35-5930-4fb2-ac07-1a66bebcff70",
+      "name": "Code",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c913f472-2c9c-4aab-aa5b-514fecaefee5",
+              "leftValue": "={{ $('Webhook1').item.json.body.customData.IsFinalized }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        240
+      ],
+      "id": "6ab2cddf-4da1-486e-b58a-069ce8e76516",
+      "name": "Finalizó el servicio?"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1ksTSniJMmYt6SMuONYwyGoXaF8FKfGOjKqli00jghWI/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Pipeline_Stage",
+              "lookupValue": "6. Pausa"
+            },
+            {
+              "lookupColumn": "Contact_ID",
+              "lookupValue": "={{ $('Finalizó el servicio?').item.json.Contact_ID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        112
+      ],
+      "id": "2804292c-c40d-483d-8f66-9ef33fbfd5f8",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1PZsx8SSjjYVtdwD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos los datos del nodo de Google Sheets\nconst items = $('Get row(s) in sheet').all();\n\nlet totalHoras = parseFloat($('Tiempo de todo el servicio').first().json.horas);\nconst detallesPasos = [];\n\n// 1. Recorremos cada fila (cada paso del servicio)\nfor (const item of items) {\n  // Convertimos el valor a un número y lo sumamos al total\n  const duracion = parseFloat(item.json.Duracion_horas) || 0;\n  totalHoras -= duracion;\n\n  // 2. Guardamos los detalles de cada paso para el mensaje final\n  detallesPasos.push({\n    etapa: item.json.Etapa, // <-- ¡Ajusta el nombre de la columna de la etapa si es diferente!\n    duracion: `${duracion.toFixed(2)} horas`\n  });\n}\n\n// 3. (Opcional) Formateamos el total a horas y minutos para que sea más legible\nconst horas = Math.floor(totalHoras);\nconst minutos = Math.round((totalHoras - horas) * 60);\nconst tiempoTotalFormateado = `${horas}h ${minutos}m`;\n\n// 4. Devolvemos el resultado\nreturn [{\n  json: {\n    tiempoTotal: totalHoras,\n    tiempoTotalFormateado: tiempoTotalFormateado,\n    detalles: detallesPasos\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        112
+      ],
+      "id": "1b43f3b3-5226-4dab-a65a-b02b57973521",
+      "name": "Quitar valores de Pausa",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recoge el item de entrada\nconst item = $input.item;\n// Obtiene el valor de horas decimales del nodo anterior\nconst decimalHours = $input.first().json.horas; \n\n// Calcula las horas completas (la parte entera)\nconst hours = Math.floor(decimalHours);\n\n// Calcula los minutos\n// 1. Obtiene la parte decimal (ej. 5.75 - 5 = 0.75)\n// 2. Multiplica por 60 para obtener los minutos (ej. 0.75 * 60 = 45)\n// 3. Redondea para evitar decimales extraños por la precisión del punto flotante\nconst minutes = Math.round((decimalHours - hours) * 60);\n\n// Crea el nuevo campo con el formato \"X hrs Y min\"\nitem.json.tiempo_formateado = `${hours} hrs ${minutes} min`;\n\n// Devuelve el item original con el nuevo campo añadido\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        112
+      ],
+      "id": "3883a894-949d-4c8e-b0fd-d3c1be635b17",
+      "name": "Tiempo de todo el servicio",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Webhook1').last().json.body.customData.contact_ID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"customFields\": [\n      {\"id\": \"marca\", \"value\": null},\n      {\"id\": \"ultimo_tipo_servicio\", \"value\": null},\n      {\"id\": \"ultima_fecha_ingreso\", \"value\": null},\n      {\"id\": \"tipo_servicio\", \"value\": null},\n      {\"id\": \"hora_fin_step\", \"value\": null},\n      {\"id\": \"hora_inicio_servicio\", \"value\": null},\n      {\"id\": \"hora_inicio_step\", \"value\": null},\n      {\"id\": \"hora_fin_step\", \"value\": null},\n      {\"id\": \"etapa_actual\", \"value\": null},\n      {\"id\": \"duracion_servicio\", \"value\": null},\n      {\"id\": \"clase_vehiculo\", \"value\": null},\n      {\"id\": \"last_quote_json\", \"value\": null}\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        112
+      ],
+      "id": "6444f227-a87c-41b9-a75c-98a934d38455",
+      "name": "Resetear CF en CRM",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "79M6THVwJzx9FfOl",
+          "name": "Private Integration GHL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-5001994700",
+        "text": "=Datos de vehículo finalizado:\n\nNombre_completo: \"{{ $('Webhook1').last().json.body.customData.nombre }} {{ $('Webhook1').last().json.body.customData.apellido }}\",\nVehiculo: \"{{ $('Webhook1').last().json.body.marca }} {{ $('Webhook1').last().json.body.temp_modelo_vehiculo }}\",\nServicio: \"{{ $('Webhook1').last().json.body.customData.TipoServicio }}\",\nPedidos: \"{{ $('Webhook1').last().json.body['Tareas o accesorios solicitados'] }}\",\nTiempo: \"{{ $json.Reformateo_horas_FinServicio }}\"\nFecha de inicio de servicio: {{ $('Webhook1').last().json.body['Hora_Inicio_Servicio'] }}\nFecha de Fin de servicio: {{ $('Webhook1').last().json.body['Hora_Fin_Servicio'] }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2624,
+        112
+      ],
+      "id": "01ca4aaf-4412-4998-98ca-4f3b4dcd4c2f",
+      "name": "Send a text message",
+      "webhookId": "85ac3f2a-a083-40bc-a9cc-872e87267166",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "telegramApi": {
+          "id": "1tn1lpczXb4dRi4J",
+          "name": "Telegram account Inverbot AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Proceso de autos\n\nFlujo diseñado para captar tiempos en los que cada auto se encuentra en cierto paso del Pipeline definido en GHL. \n\n1. El nodo `Code` transforma el tiempo en un número decimal, para poder registrarlo. \n2. Cada etapa de pipeline finalizada es registrada con su tiempo en decimal dentro de la tabla de google drive. Siempre se tiene que evaluar que la etapa es cualquiera diferente de la final, pues si se completa la etapa final, se considera el servicio como completo.\n2. Una vez finalizado el servicio, es decir, se ha verificado que el auto ha pasado la última etapa del pipeline, y se recibe `true` en el custom Field de `IsFinalized`se evalúa el tiempo de finalización, se suman las horas de todo el servicio, y se añade a la tabla. Ya que la pausa es una etapa del pipeline, se lo considera como tiempo negativo, y se lo resta del total de tiempo. \n",
+        "height": 368,
+        "width": 608
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        256,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "ee75af02-77d6-49a6-8638-be787bde0b2c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Registro de cada etapa\n\nDuración de la etapa y nueva fila en Google Sheets.",
+        "height": 340,
+        "width": 1012,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -174,
+        70
+      ],
+      "id": "e6f737f2-e1d7-4d58-9cbb-23a8c0fd1bb5",
+      "name": "Doc - Seccion 1"
+    },
+    {
+      "parameters": {
+        "content": "## Cierre del servicio\n\nTiempo total, actualización de la hoja, aviso por Telegram y limpieza en GHL.",
+        "height": 468,
+        "width": 2132,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        898,
+        -58
+      ],
+      "id": "b2c3a6d3-c246-484a-a462-65e073c73249",
+      "name": "Doc - Seccion 2"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 Agente Servicios Tecnicos Speed Up\n\n**Cliente:** Speed Up (taller / servicio técnico automotriz)\n\n**Objetivo:** Registra en Google Sheets el tiempo de cada etapa del servicio de un vehículo y notifica por Telegram al finalizar.\n\n**Disparador:** Webhook POST `speedUpRegistroVehicular` llamado desde GHL al cambiar de etapa en el pipeline.\n\n**Integraciones:** GoHighLevel (LeadConnector API v2), Google Sheets, Telegram\n\n**Credenciales a asignar al importar:**\n- Google Sheets OAuth2: Google Sheets account\n- Header Auth: Private Integration GHL\n- Telegram: Telegram account Inverbot AI\n\n**Valores a reemplazar (secretos retirados del repo):**\n- Ninguno\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/speed-up/servicios-tecnicos-speed-up/README.md",
+        "height": 628,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -174,
+        -1068
+      ],
+      "id": "b76b23d8-e98e-4618-a134-fbd3361d0156",
+      "name": "Doc - Ficha del flujo"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del flujo: Agente Servicios Tecnicos Speed Up\n\n### 1. Registro de la etapa\n- `Date & Time` calcula las horas entre `hora_inicio_step` y `hora_fin_step`; `TiempoHoras` redondea a 0,05 h y `Code` lo formatea en horas y minutos.\n- `Append row in sheet` agrega una fila con datos del cliente, vehículo, etapa y duración.\n\n### 2. Cierre del servicio\n- `Finalizó el servicio?` revisa `IsFinalized`. Si es verdadero se calcula el tiempo total entre inicio y fin del servicio (`Date & Time1`, `Tiempo de todo el servicio`).\n- `Get row(s) in sheet` + `Quitar valores de Pausa` restan del total las duraciones registradas y `Update row in sheet` guarda el resultado.\n- `Send a text message` envía el resumen a Telegram y `Resetear CF en CRM` limpia los campos del vehículo en GHL.\n\n### ⚠️ Observaciones\n- `Get row(s) in sheet` no filtra por vehículo/transacción: lee todas las filas de la hoja. Conviene filtrar por `Contact_ID` o `Transaction_ID` para que el cálculo sea solo del servicio actual.",
+        "height": 508,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        606,
+        -1068
+      ],
+      "id": "27fe7688-dc15-45b0-95e6-f8263e9b1222",
+      "name": "Doc - Descripcion del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "TiempoHoras",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TiempoHoras": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Finalizó el servicio?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Tiempo de todo el servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalizó el servicio?": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Quitar valores de Pausa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quitar valores de Pausa": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiempo de todo el servicio": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Resetear CF en CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bbbdc92e-71c2-45fd-bc92-29ab1fc22807",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "039fce773344de013634923d5a2bb656abb0045ca113d3fd7a7a61d949da1a5e"
+  },
+  "nodeGroups": [],
+  "id": "R59bRLWxl4yu0AOG",
+  "tags": [
+    {
+      "updatedAt": "2025-08-06T02:34:42.559Z",
+      "createdAt": "2025-08-06T02:34:42.559Z",
+      "id": "WDFDAWdYwaxRgg1D",
+      "name": "Beta"
+    }
+  ]
+}

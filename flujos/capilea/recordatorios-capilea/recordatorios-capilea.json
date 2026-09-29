@@ -1,0 +1,1466 @@
+{
+  "name": "Recordatorios Capilea",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11,
+              "triggerAtMinute": 30
+            },
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2000,
+        -224
+      ],
+      "id": "595b8216-da76-4873-a679-626e0f6dd6f6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ahora = new Date();\nahora.setHours(0, 0, 0, 0);\n\nconst fechaFin = new Date();\nfechaFin.setDate(ahora.getDate()+1);\nfechaFin.setHours(23, 59, 59, 999);\n\n//QUITAR LUEGO\nconst fechaInicio = new Date();\nfechaInicio.setDate(ahora.getDate()+1);\nfechaInicio.setHours(23, 59, 59, 999);\n\n// Formato Skyia\nconst formatSkyia = (date) => {\n  const d = String(date.getDate()).padStart(2, '0');\n  const m = String(date.getMonth() + 1).padStart(2, '0');\n  const y = date.getFullYear();\n  return `${d}/${m}/${y}`;\n};\n\nreturn [{\n  json: {\n    skyia: {\n      desde: formatSkyia(fechaInicio),\n      hasta: formatSkyia(fechaFin)\n    },\n    ghl: {\n      startTime: fechaInicio.getTime(), // Milisegundos\n      endTime: fechaFin.getTime()   // Milisegundos\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1808,
+        -224
+      ],
+      "id": "a70b0c8a-c79e-46ed-892f-6f63730aa5e9",
+      "name": "Get Timestamp"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuración de Fecha (Mañana) y Rango\nconst hoy = new Date();\nconst mañana = new Date(hoy);\nmañana.setDate(hoy.getDate() + 1);\n\nconst yyyy = mañana.getFullYear();\nconst mm = String(mañana.getMonth() + 1).padStart(2, '0');\nconst dd = String(mañana.getDate()).padStart(2, '0');\nconst fechaBusqueda = `${yyyy}-${mm}-${dd}`;\n\n// CONFIGURACIÓN DE RANGO (Ajustar según horario de ejecución: 09:00-14:00 o 14:00-20:00)\nconst horaMin = \"14:15\"; \nconst horaMax = \"20:00\"; \n\n// 2. Recopilar eventos de todos los nodos de GHL conectados\nconst nombresNodos = [\n  \"Get Events GHL meso\",\n  \"Get Events GHL clientes\",\n  \"Get Events GHL dermo\",\n  \"Get Events GHL prp\",\n  \"Get Events GHL controles\",\n  \"Get Events GHL revisaciones\"\n];\n\nlet todosLosEventos = [];\nnombresNodos.forEach(nombre => {\n  try {\n    const items = $(nombre).all();\n    items.forEach(item => {\n      const evs = item.json.events || [];\n      todosLosEventos = todosLosEventos.concat(evs);\n    });\n  } catch (e) { /* Nodo omitido si no hay datos */ }\n});\n\n// 3. Filtrar por Fecha, Rango y Excluir Bloqueos\nconst filtrados = todosLosEventos.filter(e => {\n  if (!e.startTime) return false;\n  const [fecha, horaFull] = e.startTime.split('T');\n  const hora = horaFull.substring(0, 5);\n  return fecha === fechaBusqueda && \n         hora >= horaMin && \n         hora < horaMax && \n         !e.title.includes(\"Bloqueo\");\n});\n\n// 4. LÓGICA DE DEDUPLICACIÓN (Evita repetición Interno/Externo)\nconst deduplicados = [];\nconst registrosVistos = new Set();\n\nfiltrados.forEach(e => {\n  const hora = e.startTime.split('T')[1].substring(0, 5);\n  // Creamos una clave única basada en HORA + TÍTULO (Nombre del paciente)\n  const claveUnica = `${hora}_${e.title.trim()}`;\n  \n  if (!registrosVistos.has(claveUnica)) {\n    registrosVistos.add(claveUnica);\n    deduplicados.push(e);\n  }\n});\n\n// 5. Ordenar cronológicamente\ndeduplicados.sort((a, b) => a.startTime.localeCompare(b.startTime));\n\n// 6. Construir el Mensaje Final\nif (deduplicados.length === 0) {\n  return [{ json: { mensaje: `✅ No hay citas programadas para mañana ${dd}/${mm} en el bloque ${horaMin}-${horaMax}.`, enviar: false } }];\n}\n\nlet texto = `*📅 RESUMEN DE CITAS - TARDE (${dd}/${mm})*\\n`;\ntexto += `*Bloque:* ${horaMin} a ${horaMax}\\n`;\ntexto += `----------------------------------\\n\\n`;\n\ndeduplicados.forEach(e => {\n  const hora = e.startTime.split('T')[1].substring(0, 5);\n  texto += `⏰ *${hora}* - ${e.title}\\n`;\n});\n\n\nreturn [{ json: { mensaje: texto, enviar: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        -64
+      ],
+      "id": "cbf95121-a625-488b-b790-e6d551fe5fc3",
+      "name": "Crear recordatorio tarde"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuración de Fecha (Mañana) y Rango\nconst hoy = new Date();\nconst mañana = new Date(hoy);\nmañana.setDate(hoy.getDate() + 1);\n\nconst yyyy = mañana.getFullYear();\nconst mm = String(mañana.getMonth() + 1).padStart(2, '0');\nconst dd = String(mañana.getDate()).padStart(2, '0');\nconst fechaBusqueda = `${yyyy}-${mm}-${dd}`;\n\n// CONFIGURACIÓN DE RANGO (Ajustar según horario de ejecución: 09:00-14:00 o 14:00-20:00)\nconst horaMin = \"09:00\"; \nconst horaMax = \"14:15\"; \n\n// 2. Recopilar eventos de todos los nodos de GHL conectados\nconst nombresNodos = [\n  \"Get Events GHL meso\",\n  \"Get Events GHL clientes\",\n  \"Get Events GHL dermo\",\n  \"Get Events GHL prp\",\n  \"Get Events GHL controles\",\n  \"Get Events GHL revisaciones\"\n];\n\nlet todosLosEventos = [];\nnombresNodos.forEach(nombre => {\n  try {\n    const items = $(nombre).all();\n    items.forEach(item => {\n      const evs = item.json.events || [];\n      todosLosEventos = todosLosEventos.concat(evs);\n    });\n  } catch (e) { /* Nodo omitido si no hay datos */ }\n});\n\n// 3. Filtrar por Fecha, Rango y Excluir Bloqueos\nconst filtrados = todosLosEventos.filter(e => {\n  if (!e.startTime) return false;\n  const [fecha, horaFull] = e.startTime.split('T');\n  const hora = horaFull.substring(0, 5);\n  return fecha === fechaBusqueda && \n         hora >= horaMin && \n         hora < horaMax && \n         !e.title.includes(\"Bloqueo\");\n});\n\n// 4. LÓGICA DE DEDUPLICACIÓN (Evita repetición Interno/Externo)\nconst deduplicados = [];\nconst registrosVistos = new Set();\n\nfiltrados.forEach(e => {\n  const hora = e.startTime.split('T')[1].substring(0, 5);\n  // Creamos una clave única basada en HORA + TÍTULO (Nombre del paciente)\n  const claveUnica = `${hora}_${e.title.trim()}`;\n  \n  if (!registrosVistos.has(claveUnica)) {\n    registrosVistos.add(claveUnica);\n    deduplicados.push(e);\n  }\n});\n\n// 5. Ordenar cronológicamente\ndeduplicados.sort((a, b) => a.startTime.localeCompare(b.startTime));\n\n// 6. Construir el Mensaje Final\nif (deduplicados.length === 0) {\n  return [{ json: { mensaje: `✅ No hay citas programadas para mañana ${dd}/${mm} en el bloque ${horaMin}-${horaMax}.`, enviar: false } }];\n}\n\nlet texto = `*📅 RESUMEN DE CITAS - MAÑANA (${dd}/${mm})*\\n`;\ntexto += `*Bloque:* ${horaMin} a ${horaMax}\\n`;\ntexto += `----------------------------------\\n\\n`;\n\ndeduplicados.forEach(e => {\n  const hora = e.startTime.split('T')[1].substring(0, 5);\n  texto += `⏰ *${hora}* - ${e.title}\\n`;\n});\n\n\nreturn [{ json: { mensaje: texto, enviar: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -336
+      ],
+      "id": "e1244163-a1e6-4e0d-a2c0-976df6689223",
+      "name": "Crear recordatorio mañana"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "02589fb3-a34f-4140-b433-eab697a4fa9b",
+              "leftValue": "={{ $('Schedule Trigger').item.json.Hour.toNumber() }}",
+              "rightValue": 11,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        -224
+      ],
+      "id": "4c0c47a2-1c7a-4748-b748-156e63be703b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "fGnEFWqMyFh0VIPV1biz"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -432,
+        512
+      ],
+      "id": "3494ce55-f1fb-4829-ae14-e7a6e557bde0",
+      "name": "Get Events GHL revisaciones1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "wWpl7nHjIzE2wbndE8pE"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -208,
+        512
+      ],
+      "id": "32ba72e6-4bc9-4020-9da9-4686b308d1f1",
+      "name": "Get Events GHL dermo1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ahora = new Date();\nahora.setHours(0, 0, 0, 0);\n\nconst fechaFin = new Date();\nfechaFin.setDate(ahora.getDate() +1);\nfechaFin.setHours(23, 59, 59, 999);\n\n//QUITAR LUEGO\nconst fechaInicio = new Date();\nfechaInicio.setDate(ahora.getDate() + 1);\nfechaInicio.setHours(23, 59, 59, 999);\n\n// Formato Skyia\nconst formatSkyia = (date) => {\n  const d = String(date.getDate()).padStart(2, '0');\n  const m = String(date.getMonth() + 1).padStart(2, '0');\n  const y = date.getFullYear();\n  return `${d}/${m}/${y}`;\n};\n\nreturn [{\n  json: {\n    skyia: {\n      desde: formatSkyia(fechaInicio),\n      hasta: formatSkyia(fechaFin)\n    },\n    ghl: {\n      startTime: fechaInicio.getTime(), // Milisegundos\n      endTime: fechaFin.getTime()   // Milisegundos\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        528
+      ],
+      "id": "15ac1801-0fc5-410a-b530-32727ede0ad4",
+      "name": "Get Timestamp1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11,
+              "triggerAtMinute": 35
+            },
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1648,
+        528
+      ],
+      "id": "2abe4753-5900-41fb-8837-81500f777a0f",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuración de Fecha (Mañana) - Usando lógica de hoy + 1\nconst hoy = new Date();\nconst mañana = new Date(hoy);\nmañana.setDate(hoy.getDate() + 1);\n\nconst yyyy = mañana.getFullYear();\nconst mm = String(mañana.getMonth() + 1).padStart(2, '0');\nconst dd = String(mañana.getDate()).padStart(2, '0');\nconst fechaMañana = `${yyyy}-${mm}-${dd}`;\n\n// 2. Rango Horario (Ajustar según bloque: 09:00-14:15 o 14:15-20:00)\nconst horaMin = \"14:15\"; \nconst horaMax = \"20:00\"; \n\n// 3. Diccionarios de Mapeo\nconst mapping = {\n  \"1\": [\"AUSENTE\"], \"2\": [\"CANCELADO\"], \"3\": [\"CONTROL PO\", \"ELECTRO\"],\n  \"5\": [\"REVISACION 1\", \"REVISACION 2\", \"REVI 2° MTC\"],\n  \"7\": [\"PRP\", \"PRP 1\"],\n  \"10\": [\"MESOTERAPIA CAPILAR\", \"MESOTERAPIA 1\", \"MESOTERAPIA FOTOS\", \"MESOTERAPIA CONTROL\", \"MESOTERAPIA REFUERZO\", \"MESOTERAPIA CON CORTICOIDES\", \"MESOTERAPIA 1 PO\", \"MESOTERAPIA BONIFCADA\"],\n  \"13\": [\"DERMOPIGMENTACION\", \"DERMOPIGMENTACIÓN\", \"MICROBLADING\"]\n};\n\nconst idToProf = { \"1\": \"AUSENTES\", \"2\": \"CANCELADOS\", \"3\": \"CONTROL MÉDICO\", \"5\": \"CONSULTA\", \"7\": \"PRP\", \"10\": \"MESOTERAPIA\", \"13\": \"DERMOPIGMENTACION\" };\n\nconst nombresNodos = [\n  \"Get Events GHL meso1\",\n  \"Get Events GHL revisaciones1\", \"Get Events GHL dermo1\", \"Get Events GHL prp1\", \"Get Events GHL controles1\"\n];\n\nlet eventosEncontrados = [];\nlet debugLog = [];\n\nnombresNodos.forEach(nombre => {\n  try {\n    const items = $(nombre).all();\n    items.forEach(item => {\n      const events = item.json.events || [];\n      eventosEncontrados = eventosEncontrados.concat(events);\n    });\n  } catch (e) { debugLog.push(`Error en nodo ${nombre}: ${e.message}`); }\n});\n\nconst unicos = [];\nconst vistos = new Set();\n\neventosEncontrados.forEach(e => {\n  // --- CAPA DE FILTRADO REFORZADA ---\n  // 1. Verificamos que existan los datos básicos\n  if (!e.startTime || !e.title) return;\n\n  // 2. RESTRICCIÓN DE ESTADO: Solo enviamos si es \"confirmed\"\n  if (e.appointmentStatus !== \"confirmed\") return;\n\n  // 3. EXCLUSIÓN DE BLOQUEOS: Ignoramos bloqueos manuales y técnicos\n  const tituloUpper = e.title.toUpperCase();\n  if (tituloUpper.includes(\"BLOQUEO\") || tituloUpper.includes(\"OCUPADO SKYIA\")) return;\n\n  const [fecha, horaFull] = e.startTime.split('T');\n  const hora = horaFull.substring(0, 5);\n\n  // 4. FILTRO TEMPORAL\n  if (fecha === fechaMañana && hora >= horaMin && hora < horaMax) {\n    const key = `${e.contactId}_${hora}`;\n    if (!vistos.has(key)) {\n      vistos.add(key);\n\n      // --- Lógica de Nombre (Capitalize) ---\n      // 1. Tomamos lo que está antes del guion y quitamos espacios extra\n      const nombreCompletoRaw = e.title.split('-')[0].trim();\n      \n      // 2. Formateamos cada palabra (Dozetas Walter Pablo)\n      const nombreFormateado = nombreCompletoRaw\n        .split(' ')\n        .filter(word => word.length > 0) // Evita espacios dobles\n        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())\n        .join(' ');\n\n      let especialidadDetectada = \"GENERAL\";\n      let idEncontrado = null;\n\n      for (const [id, productos] of Object.entries(mapping)) {\n        if (productos.some(prod => tituloUpper.includes(prod.toUpperCase()))) {\n          idEncontrado = id;\n          break;\n        }\n      }\n      \n      if (idEncontrado) especialidadDetectada = idToProf[idEncontrado];\n\n      unicos.push({\n        json: {\n          contactId: e.contactId,\n          nombre: nombreFormateado,\n          hora: hora,\n          fecha: `${dd}/${mm}/${yyyy}`,\n          grupo: hora < \"14:15\" ? \"mañana\" : \"tarde\",\n          especialidad: especialidadDetectada\n        }\n      });\n    }\n  }\n});\n\n// Depuración si no hay resultados\nif (unicos.length === 0) {\n  return [{ \n    json: { \n      status: \"Sin citas confirmadas\",\n      buscandoFecha: fechaMañana,\n      rango: `${horaMin} a ${horaMax}`,\n      totalEventosGHL: eventosEncontrados.length,\n      errores: debugLog \n    } \n  }];\n}\n\nreturn unicos;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        656
+      ],
+      "id": "a9d42656-48a0-4345-8009-ababfc2dec70",
+      "name": "Crear recordatorio tarde1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuración de Fecha (Mañana) - Usando lógica de hoy + 1\nconst hoy = new Date();\nconst mañana = new Date(hoy);\nmañana.setDate(hoy.getDate() + 1);\n\nconst yyyy = mañana.getFullYear();\nconst mm = String(mañana.getMonth() + 1).padStart(2, '0');\nconst dd = String(mañana.getDate()).padStart(2, '0');\nconst fechaMañana = `${yyyy}-${mm}-${dd}`;\n\n// 2. Rango Horario (Ajustar según bloque: 09:00-14:15 o 14:15-20:00)\nconst horaMin = \"09:00\"; \nconst horaMax = \"14:15\"; \n\n// 3. Diccionarios de Mapeo\nconst mapping = {\n  \"1\": [\"AUSENTE\"], \"2\": [\"CANCELADO\"], \"3\": [\"CONTROL PO\", \"ELECTRO\"],\n  \"5\": [\"REVISACION 1\", \"REVISACION 2\", \"REVI 2° MTC\"],\n  \"7\": [\"PRP\", \"PRP 1\"],\n  \"10\": [\"MESOTERAPIA CAPILAR\", \"MESOTERAPIA 1\", \"MESOTERAPIA FOTOS\", \"MESOTERAPIA CONTROL\", \"MESOTERAPIA REFUERZO\", \"MESOTERAPIA CON CORTICOIDES\", \"MESOTERAPIA 1 PO\", \"MESOTERAPIA BONIFCADA\"],\n  \"13\": [\"DERMOPIGMENTACION\", \"DERMOPIGMENTACIÓN\", \"MICROBLADING\"]\n};\n\nconst idToProf = { \"1\": \"AUSENTES\", \"2\": \"CANCELADOS\", \"3\": \"CONTROL MÉDICO\", \"5\": \"CONSULTA\", \"7\": \"PRP\", \"10\": \"MESOTERAPIA\", \"13\": \"DERMOPIGMENTACION\" };\n\nconst nombresNodos = [\n  \"Get Events GHL meso1\",\n  \"Get Events GHL revisaciones1\", \"Get Events GHL dermo1\", \"Get Events GHL prp1\", \"Get Events GHL controles1\"\n];\n\nlet eventosEncontrados = [];\nlet debugLog = [];\n\nnombresNodos.forEach(nombre => {\n  try {\n    const items = $(nombre).all();\n    items.forEach(item => {\n      const events = item.json.events || [];\n      eventosEncontrados = eventosEncontrados.concat(events);\n    });\n  } catch (e) { debugLog.push(`Error en nodo ${nombre}: ${e.message}`); }\n});\n\nconst unicos = [];\nconst vistos = new Set();\n\neventosEncontrados.forEach(e => {\n  // --- CAPA DE FILTRADO REFORZADA ---\n  // 1. Verificamos que existan los datos básicos\n  if (!e.startTime || !e.title) return;\n\n  // 2. RESTRICCIÓN DE ESTADO: Solo enviamos si es \"confirmed\"\n  if (e.appointmentStatus !== \"confirmed\") return;\n\n  // 3. EXCLUSIÓN DE BLOQUEOS: Ignoramos bloqueos manuales y técnicos\n  const tituloUpper = e.title.toUpperCase();\n  if (tituloUpper.includes(\"BLOQUEO\") || tituloUpper.includes(\"OCUPADO SKYIA\")) return;\n\n  const [fecha, horaFull] = e.startTime.split('T');\n  const hora = horaFull.substring(0, 5);\n\n  // 4. FILTRO TEMPORAL\n  if (fecha === fechaMañana && hora >= horaMin && hora < horaMax) {\n    const key = `${e.contactId}_${hora}`;\n    if (!vistos.has(key)) {\n      vistos.add(key);\n\n      // --- Lógica de Nombre (Capitalize) ---\n      // 1. Tomamos lo que está antes del guion y quitamos espacios extra\n      const nombreCompletoRaw = e.title.split('-')[0].trim();\n      \n      // 2. Formateamos cada palabra (Dozetas Walter Pablo)\n      const nombreFormateado = nombreCompletoRaw\n        .split(' ')\n        .filter(word => word.length > 0) // Evita espacios dobles\n        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())\n        .join(' ');\n\n      let especialidadDetectada = \"GENERAL\";\n      let idEncontrado = null;\n\n      for (const [id, productos] of Object.entries(mapping)) {\n        if (productos.some(prod => tituloUpper.includes(prod.toUpperCase()))) {\n          idEncontrado = id;\n          break;\n        }\n      }\n      \n      if (idEncontrado) especialidadDetectada = idToProf[idEncontrado];\n\n      unicos.push({\n        json: {\n          contactId: e.contactId,\n          nombre: nombreFormateado,\n          hora: hora,\n          fecha: `${dd}/${mm}/${yyyy}`,\n          grupo: hora < \"14:15\" ? \"mañana\" : \"tarde\",\n          especialidad: especialidadDetectada\n        }\n      });\n    }\n  }\n});\n\n// Depuración si no hay resultados\nif (unicos.length === 0) {\n  return [{ \n    json: { \n      status: \"Sin citas confirmadas\",\n      buscandoFecha: fechaMañana,\n      rango: `${horaMin} a ${horaMax}`,\n      totalEventosGHL: eventosEncontrados.length,\n      errores: debugLog \n    } \n  }];\n}\n\nreturn unicos;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        368
+      ],
+      "id": "1f13217d-84e2-46a0-ba89-3f1595e855d7",
+      "name": "Crear recordatorio mañana1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "02589fb3-a34f-4140-b433-eab697a4fa9b",
+              "leftValue": "={{ $('Schedule Trigger1').item.json.Hour.toNumber() }}",
+              "rightValue": 11,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        512
+      ],
+      "id": "60103586-ff36-41f7-a0c6-39e2c96ac9a9",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/bbWHmyzXnoanJMsKSsJl/webhook-trigger/956ce940-83a5-4916-a448-ef59e94cffbb",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1216,
+        656
+      ],
+      "id": "e32273a8-6d1c-4b6b-b7eb-070d52fc12d1",
+      "name": "HTTP Request",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/bbWHmyzXnoanJMsKSsJl/webhook-trigger/956ce940-83a5-4916-a448-ef59e94cffbb",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1248,
+        352
+      ],
+      "id": "e4af4b25-8112-4079-bce2-012769c033b3",
+      "name": "HTTP Request1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "LzQBDcqDSopp37434OTm"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -656,
+        512
+      ],
+      "id": "7efe6b96-7cbf-42fb-b5e9-a3ce69a11321",
+      "name": "Get Events GHL meso1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "Nn2PyACs0OBYSrQ5bFzu"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        16,
+        512
+      ],
+      "id": "0dc046a1-6c1e-4783-9054-889e58dd9bc4",
+      "name": "Get Events GHL prp1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "MEpJfFMuZXbtMgK8DbCy"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp1').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        512
+      ],
+      "id": "61aa9219-b10c-4b30-b351-77e38cc7be64",
+      "name": "Get Events GHL controles1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "fGnEFWqMyFh0VIPV1biz"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1040,
+        -240
+      ],
+      "id": "7c26696f-0a61-4dbd-9b2f-a7c6eced3bd6",
+      "name": "Get Events GHL revisaciones",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "wWpl7nHjIzE2wbndE8pE"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -752,
+        -240
+      ],
+      "id": "abdcde5b-4dfe-4319-a0d2-46c1424b4371",
+      "name": "Get Events GHL dermo",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "LzQBDcqDSopp37434OTm"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1296,
+        -240
+      ],
+      "id": "39cfec74-e34a-4cc3-ba5d-8209a535e905",
+      "name": "Get Events GHL meso",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "Nn2PyACs0OBYSrQ5bFzu"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -512,
+        -224
+      ],
+      "id": "7a027ccf-2931-445a-bfca-59325df34113",
+      "name": "Get Events GHL prp",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "MEpJfFMuZXbtMgK8DbCy"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $('Get Timestamp').item.json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -256,
+        -224
+      ],
+      "id": "b6aea0b9-6094-441c-b023-a66feb007d12",
+      "name": "Get Events GHL controles",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/ca0hQ9pCYPnxuZexRY22",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFields\": [\n    {\n      \"id\": \"barrido_recordatorios\",\n      \"value\": {{ $json.megaJSON }}\n    }\n  ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1424,
+        -64
+      ],
+      "id": "47a007f5-6932-4f4d-a221-956bbe2af0b4",
+      "name": "current_task seteo",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ac396f0e-82a6-4b51-a20b-b910850f79eb",
+              "name": "megaJSON",
+              "value": "={{ JSON.stringify($json.mensaje) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        -64
+      ],
+      "id": "cc439e77-858b-4a6f-aa3c-d97959d3b03f",
+      "name": "Stringify JSON"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/bbWHmyzXnoanJMsKSsJl/webhook-trigger/mLkBwrwN8qq3Ch6FuwRL",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1648,
+        -64
+      ],
+      "id": "3fb23706-b78d-4931-a6e1-6b58ee7823cb",
+      "name": "Mensaje Angelo",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/ca0hQ9pCYPnxuZexRY22",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFields\": [\n    {\n      \"id\": \"barrido_recordatorios\",\n      \"value\": {{ $json.megaJSON }}\n    }\n  ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        -320
+      ],
+      "id": "1614d4ee-08c0-499e-999a-b6d7eacc9442",
+      "name": "current_task seteo1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ac396f0e-82a6-4b51-a20b-b910850f79eb",
+              "name": "megaJSON",
+              "value": "={{ JSON.stringify($json.mensaje) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        -320
+      ],
+      "id": "8284e8a5-5b15-4ebd-9561-7e0d832302b2",
+      "name": "Stringify JSON1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/bbWHmyzXnoanJMsKSsJl/webhook-trigger/mLkBwrwN8qq3Ch6FuwRL",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1664,
+        -320
+      ],
+      "id": "7b6ad221-da32-4b6c-b091-d07b01091a97",
+      "name": "Mensaje Angelo1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c79bd373-c771-472f-ae1d-958eafd7ab5c",
+              "leftValue": "={{ $('Schedule Trigger').item.json['Day of week'] }}",
+              "rightValue": "Friday",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "4aae96c1-275d-4e01-b692-0ca91b767002",
+              "leftValue": "={{ $('Schedule Trigger').item.json['Day of week'] }}",
+              "rightValue": "Saturday",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1584,
+        -224
+      ],
+      "id": "cc65862a-64ef-4bd1-9be9-6c0fb9f3438f",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c79bd373-c771-472f-ae1d-958eafd7ab5c",
+              "leftValue": "={{ $('Schedule Trigger1').item.json['Day of week'] }}",
+              "rightValue": "Friday",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "4aae96c1-275d-4e01-b692-0ca91b767002",
+              "leftValue": "={{ $('Schedule Trigger1').item.json['Day of week'] }}",
+              "rightValue": "Saturday",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1104,
+        528
+      ],
+      "id": "7b194902-ed97-47fd-b63b-db2c19c29374",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/calendars/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "bbWHmyzXnoanJMsKSsJl"
+            },
+            {
+              "name": "calendarId",
+              "value": "LzQBDcqDSopp37434OTm"
+            },
+            {
+              "name": "startTime",
+              "value": "={{ $json.ghl.startTime }}"
+            },
+            {
+              "name": "endTime",
+              "value": "={{ $json.ghl.endTime }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -176,
+        768
+      ],
+      "id": "4250b1ee-dd6e-40ad-af82-c29ec7bd53f8",
+      "name": "Get Events GHL cirugias",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "i79WIgMPEagwyAx4",
+          "name": "Auth Belgrano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Rama A: Resumen de citas para el equipo\n\n11:30 y 17:00 → eventos de mañana → resumen por bloque → campo barrido_recordatorios + webhook de GHL (Angelo).",
+        "height": 612,
+        "width": 3844,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2030,
+        -506
+      ],
+      "id": "02ca0618-4a3f-4179-a20b-1c65b5da0db6",
+      "name": "Doc - Seccion 1"
+    },
+    {
+      "parameters": {
+        "content": "## Rama B: Recordatorio a cada paciente\n\n11:35 y 17:00 → eventos de mañana → citas confirmadas → un disparo al webhook de GHL por paciente.",
+        "height": 756,
+        "width": 3076,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1678,
+        182
+      ],
+      "id": "bcd3ce51-2068-4019-992c-c171d432ce96",
+      "name": "Doc - Seccion 2"
+    },
+    {
+      "parameters": {
+        "content": "# 📋 Recordatorios Capilea\n\n**Cliente:** Capilea (sucursal Belgrano)\n\n**Objetivo:** Dos veces al día arma los recordatorios de las citas del día siguiente: un resumen para el equipo y un disparo por paciente en GHL.\n\n**Disparador:** Dos Schedule Triggers: 11:30 y 17:00 (rama resumen) y 11:35 y 17:00 (rama pacientes).\n\n**Integraciones:** GoHighLevel (LeadConnector API v2) – calendarios, contactos y webhooks entrantes (Inbound Webhook)\n\n**Credenciales a asignar al importar:**\n- Header Auth: Auth Belgrano\n\n**Valores a reemplazar (secretos retirados del repo):**\n- Ninguno\n\n📄 Documentación completa: https://github.com/InversAI-LLC/workflowsn8n/blob/main/flujos/capilea/recordatorios-capilea/README.md",
+        "height": 604,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2030,
+        -1326
+      ],
+      "id": "48785a91-35cf-45c0-8a95-c0bb367c1891",
+      "name": "Doc - Ficha del flujo"
+    },
+    {
+      "parameters": {
+        "content": "## Descripción del flujo: Recordatorios Capilea\n\n### Rama A: Resumen para el equipo (arriba)\n- `Get Timestamp` calcula el rango de fechas de mañana en formato GHL y Skyia.\n- `If2` filtra el día de la semana (intención: no enviar viernes ni sábado).\n- `Get Events GHL ...` lee los eventos de los calendarios meso, revisaciones, dermo, PRP y controles.\n- `If` elige bloque mañana (ejecución de las 11) o tarde. `Crear recordatorio ...` filtra por fecha/rango, excluye *Bloqueos*, deduplica y arma un texto con la lista de citas.\n- `Stringify JSON` + `current_task seteo` guardan el resumen en el campo `barrido_recordatorios` de un contacto interno y `Mensaje Angelo` dispara el workflow de GHL que lo envía.\n\n### Rama B: Recordatorio por paciente (abajo)\n- Misma lectura de calendarios (`... 1`).\n- `Crear recordatorio mañana1 / tarde1` se queda solo con citas **confirmadas**, excluye bloqueos y *Ocupado Skyia*, normaliza el nombre y detecta la especialidad.\n- `HTTP Request` / `HTTP Request1` envían cada paciente al webhook de GHL que dispara el recordatorio (lotes de 2 cada 5 s).\n\n### ⚠️ Observaciones\n- `If2` / `If3` usan combinador **OR** con dos condiciones *distinto de* (viernes, sábado); esa condición siempre es verdadera. Si la intención es excluir ambos días, debe ser **AND**.\n- Las fechas se calculan con `new Date()` (zona horaria del servidor). `Recordatorios Ausentes` ya usa la zona `America/Argentina/Buenos_Aires`; conviene unificar.\n- `Get Events GHL cirugias` no está conectado y el código referencia un nodo `Get Events GHL clientes` que no existe (se ignora por el try/catch).",
+        "height": 700,
+        "width": 1000
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1250,
+        -1326
+      ],
+      "id": "913ff288-7cd9-4138-98e6-fadd71eba943",
+      "name": "Doc - Descripcion del flujo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Timestamp": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear recordatorio mañana": {
+      "main": [
+        [
+          {
+            "node": "Stringify JSON1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Crear recordatorio mañana",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear recordatorio tarde",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear recordatorio tarde": {
+      "main": [
+        [
+          {
+            "node": "Stringify JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL dermo1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL prp1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Timestamp1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get Timestamp1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Crear recordatorio mañana1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear recordatorio tarde1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL revisaciones1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL dermo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear recordatorio tarde1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear recordatorio mañana1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL meso1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL revisaciones1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL prp1": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL controles1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL controles1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL revisaciones": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL dermo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL dermo": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL prp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL meso": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL revisaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL prp": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL controles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events GHL controles": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stringify JSON": {
+      "main": [
+        [
+          {
+            "node": "current_task seteo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "current_task seteo": {
+      "main": [
+        [
+          {
+            "node": "Mensaje Angelo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "current_task seteo1": {
+      "main": [
+        [
+          {
+            "node": "Mensaje Angelo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stringify JSON1": {
+      "main": [
+        [
+          {
+            "node": "current_task seteo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL meso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Get Events GHL meso1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "errorWorkflow": "2nO4EfS90U7HC6hG"
+  },
+  "versionId": "1408012a-4d92-4211-bb54-cc6ac1fad89d",
+  "meta": {
+    "instanceId": "039fce773344de013634923d5a2bb656abb0045ca113d3fd7a7a61d949da1a5e"
+  },
+  "nodeGroups": [],
+  "id": "mTr6pkGtpkM4cvda",
+  "tags": [
+    {
+      "updatedAt": "2026-04-22T01:37:42.855Z",
+      "createdAt": "2026-04-22T01:37:42.855Z",
+      "id": "0wWWdYshBYrVSsTd",
+      "name": "Belgrano"
+    }
+  ]
+}
